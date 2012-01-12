@@ -1,0 +1,134 @@
+<!--
+    Auto-generated test-site
+-->
+<html>
+<head>
+<title>test page for btlauncher plugin </title>
+</head>
+<script type="text/javascript">
+
+var WINDOW_HASH = '4823';
+
+  function getelt(id) {
+    return document.getElementById(id);
+  }
+        function plugin0()
+        {
+            return document.getElementById('plugin0');
+        }
+        plugin = plugin0;
+
+
+        function pluginLoaded() {
+          console.log('plugin loaded');
+          getelt('loaded').innerHTML = 'plugin loaded ok';
+
+          populatestuff('uTorrent');
+          populatestuff('BitTorrent');
+
+        }
+
+
+function populatestuff(program) {
+ getelt(program + '_installPath').innerHTML = plugin().getInstallPath(program);
+
+
+ if (program == 'uTorrent') {
+   var window_name = 'Torrent' + WINDOW_HASH;
+ } else if (program == 'BitTorrent') {
+   var window_name = 'BT' + WINDOW_HASH;
+ } else {
+   var window_name = program;
+ }
+
+ var isrunning = plugin().isRunning(window_name);
+
+ getelt(program + '_isRunning').innerHTML = isrunning;
+
+ if (! isrunning) {
+   getelt(program + '_run').disabled = null;
+   getelt(program + '_install').disabled = null;
+ }
+ 
+}
+
+function run(program) {
+  plugin().runProgram(program);
+}
+
+function install(program) {
+  plugin().downloadProgram(program, function(a,b,c) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c); } );
+}
+
+    </script>
+<body>
+<div> the plugin --&gt;
+    <object id="plugin0" type="application/x-btlauncher" width="10" height="10">
+      <param name="onload" value="pluginLoaded" />
+    </object>
+</div>
+<br />
+
+
+<br />
+plugin loaded: 
+<span id="loaded">not yet
+</span>
+
+
+<fieldset>
+<legend>uTorrent</legend>
+
+<br />
+install path: 
+<span id="uTorrent_installPath" style="background:#ccf">---
+</span>
+
+<br />
+is running: 
+<span id="uTorrent_isRunning" style="background:#ccf">---
+</span>
+
+<br />
+run it
+<input onclick="run('uTorrent')" type="button" value="run!" id="uTorrent_run" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('uTorrent')" type="button" value="secret install!" id="uTorrent_install" disabled="disabled" />
+<span id="uTorrent_installresult" style="background:#ccf"></span>
+
+
+</fieldset>
+
+<fieldset>
+<legend>BitTorrent</legend>
+
+
+
+<br />
+install path: 
+<span id="BitTorrent_installPath" style="background:#ccf">---
+</span>
+
+<br />
+is running: 
+<span id="BitTorrent_isRunning" style="background:#ccf">---
+</span>
+
+<br />
+run it
+<input onclick="run('BitTorrent')" type="button" value="run!" id="BitTorrent_run" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('BitTorrent')" type="button" value="secret install!" id="BitTorrent_install" disabled="disabled" />
+<span id="BitTorrent_installresult" style="background:#ccf"></span>
+
+
+</fieldset>
+
+
+
+</body>
+</html>
