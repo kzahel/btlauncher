@@ -8,8 +8,18 @@
 #include "variant_list.h"
 #include "DOM/Document.h"
 #include "global/config.h"
-
 #include "btlauncherAPI.h"
+#include "windows.h"
+
+   #include <map>
+    #include <string>
+    #include <stdio.h>
+    #include <string.h>
+#include <atlbase.h>
+#include <atlstr.h>
+#include <string.h>
+
+#define PRODUCT_NAME "uTorrent"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr host)
@@ -25,7 +35,10 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 {
     registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
     registerMethod("testEvent", make_method(this, &btlauncherAPI::testEvent));
-
+	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
+	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
+	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
+	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
     // Read-write property
     registerProperty("testString",
                      make_property(this,
@@ -96,4 +109,150 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 {
     fire_fired(var, true, 1);
 }
+#define bufsz 2048
+void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
+									   bool success,
+									   const FB::HeaderMap& headers,
+									   const boost::shared_array<uint8_t>& data,
+									   const size_t size) {
+	std::string syspath;
+	syspath = FB::System::getTempPath();
+	syspath.append("utorrent");
+	
+	char buf[200];
+	itoa( rand(), buf, 10 );
+	syspath.append(buf);
+	syspath.append(".exe");
+	HANDLE hFile = CreateFileA( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
+	if (hFile == INVALID_HANDLE_VALUE) {
+		
+		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
+		return;
+	}
+	PVOID ptr = (VOID*) data.get();
+	DWORD written = 0;
+	BOOL RESULT = WriteFile( hFile, ptr, size, &written, NULL);
+	CloseHandle(hFile);
+	
+	if (! RESULT) {
+		callback->InvokeAsync("", FB::variant_list_of("FILE")(false)(GetLastError()));
+		return;
+	}
+	std::string installcommand = std::string(syspath);
+	installcommand.append(" /NOINSTALL /MINIMIZED /HIDE");
+	//HINSTANCE result = ShellExecuteA(NULL, NULL, installcommand.c_str(), NULL, NULL, NULL);
+	// TODO -- use CreateProcess
 
+	STARTUPINFOA info;
+	PROCESS_INFORMATION procinfo;
+	memset(&info,0,sizeof(info));
+	info.cb = sizeof(STARTUPINFO);
+	BOOL bProc = CreateProcessA(NULL, (char*) installcommand.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+
+	if(bProc) {
+		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError()));
+	} else {
+		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(false)(installcommand.c_str())(GetLastError()));
+	}
+
+}
+
+
+#define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
+//#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
+void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+	std::string url = std::string(UT_DL);
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, _1, _2, _3, _4)
+		);
+}
+
+
+std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key) {
+	CRegKey regKey;
+	const CString REG_SW_GROUP = path.c_str();
+	TCHAR szBuffer[bufsz];
+	ULONG cchBuffer = bufsz;
+	LONG RESULT;
+	RESULT = regKey.Open(HKEY_LOCAL_MACHINE, REG_SW_GROUP, KEY_READ);
+	if (RESULT == ERROR_SUCCESS) {
+		RESULT = regKey.QueryStringValue( key.c_str(), szBuffer, &cchBuffer );
+		regKey.Close();
+		if (RESULT == ERROR_SUCCESS) {
+			return std::wstring(szBuffer);
+		} else {
+			return std::wstring(_T(""));
+		}
+	} else {
+		return std::wstring(_T(""));
+	}
+}
+
+#define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
+
+std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
+	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
+	return getRegStringValue( reg_group, _T("DisplayVersion") );
+}
+std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {	
+	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
+	return getRegStringValue( reg_group, _T("InstallLocation") );
+}
+
+std::wstring getExecutablePath(const std::wstring& program) {
+	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
+	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation") );
+	location.append( _T("\\") );
+	location.append( program );
+	location.append( _T(".exe") );
+	return location;
+}
+
+
+
+HINSTANCE launch_program(const std::wstring& program) {
+	HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
+	return result;
+}
+
+FB::variant btlauncherAPI::runProgram(const std::wstring& program) {
+	return launch_program(program);
+}
+
+
+
+TCHAR classname[50];
+struct callbackdata {
+	callbackdata() {
+		found = FALSE;
+	}
+	BOOL found;
+	std::wstring foundname;
+	std::wstring name;
+};
+
+BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
+	GetClassName(hWnd, classname, sizeof(classname));
+	callbackdata* cbdata = (callbackdata*) lParam;
+	// BT4823 see gui/wndmain.cpp for the _utorrent_classname (begins with 4823)
+	if (wcsstr(classname, cbdata->name.c_str())) {	
+		//FB::JSObjectPtr& callback = *((FB::JSObjectPtr*)lParam);
+		cbdata->found = true;
+		cbdata->foundname = std::wstring(classname);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+FB::variant btlauncherAPI::isRunning(const std::wstring& val) {
+	callbackdata cbdata;
+	cbdata.name = val;
+	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
+	if (cbdata.found) {
+		return cbdata.foundname;
+	} else {
+		return false;
+	}
+}
+
+//FB::variant btlauncherAPI::launchClient(const std::
