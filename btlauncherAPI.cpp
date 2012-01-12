@@ -37,6 +37,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
     registerMethod("testEvent", make_method(this, &btlauncherAPI::testEvent));
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
+	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
     // Read-write property
@@ -227,8 +228,8 @@ struct callbackdata {
 		found = FALSE;
 	}
 	BOOL found;
-	std::wstring foundname;
 	std::wstring name;
+	FB::VariantList list;
 };
 
 BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
@@ -237,22 +238,38 @@ BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 	// BT4823 see gui/wndmain.cpp for the _utorrent_classname (begins with 4823)
 	if (wcsstr(classname, cbdata->name.c_str())) {	
 		//FB::JSObjectPtr& callback = *((FB::JSObjectPtr*)lParam);
-		cbdata->found = true;
-		cbdata->foundname = std::wstring(classname);
-		return FALSE;
+		//cbdata->found = true;
+		cbdata->list.push_back( std::wstring(classname) );
+		//return FALSE;
 	}
 	return TRUE;
 }
 
+FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
+	FB::VariantList list;
+	HWND hWnd = FindWindow( val.c_str(), NULL );
+	DWORD pid;
+	DWORD parent;
+	parent = GetWindowThreadProcessId(hWnd, &pid);
+	HANDLE pHandle = OpenProcess(PROCESS_TERMINATE, NULL, pid);
+	if (! pHandle) {
+		list.push_back("could not open process");
+		list.push_back(GetLastError());
+	} else {
+		BOOL result = TerminateProcess(pHandle, 0);
+		list.push_back("ok");
+		list.push_back(result);
+	}
+	return list;
+}
+
 FB::variant btlauncherAPI::isRunning(const std::wstring& val) {
+	FB::VariantList list;
 	callbackdata cbdata;
+	cbdata.list = list;
 	cbdata.name = val;
 	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
-	if (cbdata.found) {
-		return cbdata.foundname;
-	} else {
-		return false;
-	}
+	return cbdata.list;
 }
 
 //FB::variant btlauncherAPI::launchClient(const std::

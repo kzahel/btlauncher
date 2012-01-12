@@ -43,6 +43,7 @@ public:
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val);
 	FB::variant isRunning(const std::wstring& val);
+	FB::VariantList stopRunning(const std::wstring& val);
 
     // Event helpers
     FB_JSAPI_EVENT(fired, 3, (const FB::variant&, bool, int));
