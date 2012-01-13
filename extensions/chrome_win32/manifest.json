@@ -1,0 +1,18 @@
+{
+    // Required
+    "name": "Gyre",
+    "version": "0.1",
+	"icons": {
+		"128": "logo.png"
+	},
+
+    // Recommended
+    "description": "Internet better",
+
+    // Add any of these that you need
+    "plugins": [
+        {
+            "path": "npbtlauncher.dll", "public": true
+        }
+    ]
+}
