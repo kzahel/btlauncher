@@ -9,12 +9,6 @@
     // Recommended
     "description": "Internet better",
 
-	"app": {
-		"launch": {
-			"local_path": "index.html"
-		}
-	},	
-	
     // Add any of these that you need
     "plugins": [
         {
