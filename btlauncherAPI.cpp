@@ -10,7 +10,6 @@
 #include "global/config.h"
 #include "btlauncherAPI.h"
 #include "windows.h"
-
    #include <map>
     #include <string>
     #include <stdio.h>
@@ -18,8 +17,6 @@
 #include <atlbase.h>
 #include <atlstr.h>
 #include <string.h>
-
-#define PRODUCT_NAME "uTorrent"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr host)
@@ -36,7 +33,9 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
     registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
     registerMethod("testEvent", make_method(this, &btlauncherAPI::testEvent));
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
+	registerMethod("getInstallVersion", make_method(this, &btlauncherAPI::getInstallVersion));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
+	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
     // Read-write property
@@ -111,19 +110,25 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 }
 #define bufsz 2048
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
+									   std::wstring& program,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
-	std::string syspath;
-	syspath = FB::System::getTempPath();
-	syspath.append("utorrent");
-	
-	char buf[200];
-	itoa( rand(), buf, 10 );
-	syspath.append(buf);
-	syspath.append(".exe");
-	HANDLE hFile = CreateFileA( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
+	TCHAR temppath[500];
+	DWORD gettempresult = GetTempPath(500, temppath);
+	if (! gettempresult) {
+		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
+		return;
+	}
+	std::wstring syspath(temppath);
+	syspath.append( program.c_str() );
+	boost::uuids::random_generator gen;
+	boost::uuids::uuid u = gen();
+	syspath.append( boost::uuids::to_wstring(u) );
+	syspath.append(_T(".exe"));
+
+	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
 		
 		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
@@ -138,17 +143,19 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		callback->InvokeAsync("", FB::variant_list_of("FILE")(false)(GetLastError()));
 		return;
 	}
-	std::string installcommand = std::string(syspath);
-	installcommand.append(" /NOINSTALL /MINIMIZED /HIDE");
-	//HINSTANCE result = ShellExecuteA(NULL, NULL, installcommand.c_str(), NULL, NULL, NULL);
-	// TODO -- use CreateProcess
-
-	STARTUPINFOA info;
+	std::wstring installcommand = std::wstring(syspath);
+	installcommand.append(_T(" /NOINSTALL /MINIMIZED /HIDE"));
+	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
 	memset(&info,0,sizeof(info));
 	info.cb = sizeof(STARTUPINFO);
-	BOOL bProc = CreateProcessA(NULL, (char*) installcommand.c_str(), NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	 
+	/* CreateProcessW can modify installcommand thus we allocate needed memory */ 
+	wchar_t * pwszParam = new wchar_t[installcommand.size() + 1]; 
+	const wchar_t* pchrTemp = installcommand.c_str(); 
+    wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
 
+	BOOL bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 	if(bProc) {
 		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError()));
 	} else {
@@ -159,11 +166,20 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 
 
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
+#define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
+
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
-	std::string url = std::string(UT_DL);
+	std::string url;
+
+	if (wcsstr(program.c_str(), _T("uTorrent"))) {	
+		url = std::string(UT_DL);
+	} else {
+		url = std::string(BT_DL);
+	}
+		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
 		);
 }
 
@@ -227,8 +243,8 @@ struct callbackdata {
 		found = FALSE;
 	}
 	BOOL found;
-	std::wstring foundname;
 	std::wstring name;
+	FB::VariantList list;
 };
 
 BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
@@ -237,22 +253,38 @@ BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 	// BT4823 see gui/wndmain.cpp for the _utorrent_classname (begins with 4823)
 	if (wcsstr(classname, cbdata->name.c_str())) {	
 		//FB::JSObjectPtr& callback = *((FB::JSObjectPtr*)lParam);
-		cbdata->found = true;
-		cbdata->foundname = std::wstring(classname);
-		return FALSE;
+		//cbdata->found = true;
+		cbdata->list.push_back( std::wstring(classname) );
+		//return FALSE;
 	}
 	return TRUE;
 }
 
+FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
+	FB::VariantList list;
+	HWND hWnd = FindWindow( val.c_str(), NULL );
+	DWORD pid;
+	DWORD parent;
+	parent = GetWindowThreadProcessId(hWnd, &pid);
+	HANDLE pHandle = OpenProcess(PROCESS_TERMINATE, NULL, pid);
+	if (! pHandle) {
+		list.push_back("could not open process");
+		list.push_back(GetLastError());
+	} else {
+		BOOL result = TerminateProcess(pHandle, 0);
+		list.push_back("ok");
+		list.push_back(result);
+	}
+	return list;
+}
+
 FB::variant btlauncherAPI::isRunning(const std::wstring& val) {
+	FB::VariantList list;
 	callbackdata cbdata;
+	cbdata.list = list;
 	cbdata.name = val;
 	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
-	if (cbdata.found) {
-		return cbdata.foundname;
-	} else {
-		return false;
-	}
+	return cbdata.list;
 }
 
 //FB::variant btlauncherAPI::launchClient(const std::

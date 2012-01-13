@@ -7,6 +7,10 @@
 #include <string>
 #include <sstream>
 #include <boost/weak_ptr.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/random_generator.hpp>
+
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
 #include "btlauncher.h"
@@ -35,6 +39,7 @@ public:
     FB::variant echo(const FB::variant& msg);
 	void downloadProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
 	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
+										std::wstring& val,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
@@ -43,6 +48,7 @@ public:
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val);
 	FB::variant isRunning(const std::wstring& val);
+	FB::VariantList stopRunning(const std::wstring& val);
 
     // Event helpers
     FB_JSAPI_EVENT(fired, 3, (const FB::variant&, bool, int));
