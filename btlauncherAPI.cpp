@@ -111,6 +111,7 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 #define bufsz 2048
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
+									   std::string& version,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
@@ -169,17 +170,23 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
 
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
-void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
 	std::string url;
 
-	if (wcsstr(program.c_str(), _T("uTorrent"))) {	
-		url = std::string(UT_DL);
+	if (wcsstr(program.c_str(), _T("uTorrent"))) {
+		if (version.length() > 0) {
+			url = std::string("http://download.utorrent.com/");
+			url.append( version.c_str() );
+			url.append( "/utorrent.exe" );
+		} else {
+			url = std::string(UT_DL);
+		}
 	} else {
 		url = std::string(BT_DL);
 	}
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
 		);
 }
 

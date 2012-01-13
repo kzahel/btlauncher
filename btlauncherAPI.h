@@ -37,9 +37,10 @@ public:
 
     // Method echo
     FB::variant echo(const FB::variant& msg);
-	void downloadProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
+	void downloadProgram(const std::wstring& val, const std::string& version, const FB::JSObjectPtr& callback);
 	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
-										std::wstring& val,
+										std::wstring& program,
+										std::string& version,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
