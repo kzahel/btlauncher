@@ -43,12 +43,24 @@ function populatestuff(program) {
 
  var isrunning = plugin().isRunning(window_name);
 
+ var ver = plugin().getInstallVersion(program);
+ if (ver) {
+   getelt(program + '_version').innerHTML = ver;
+ }
+
  getelt(program + '_isRunning').innerHTML = isrunning;
 
- if (! isrunning) {
+ if (! isrunning || ! isrunning.length) {
    getelt(program + '_run').disabled = null;
    getelt(program + '_install').disabled = null;
+ } else {
+   getelt(program + '_stop').disabled = null;
+   getelt(program + '_stop').onclick = function(evt) {
+     stop(isrunning);
+   }
  }
+
+
  
 }
 
@@ -56,8 +68,17 @@ function run(program) {
   plugin().runProgram(program);
 }
 
+
+function stop(program) {
+  var result = plugin().stopRunning(program[0]);
+  console.log('stop '+program+'with result' + result);
+}
+
 function install(program) {
-  plugin().downloadProgram(program, function(a,b,c) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c); } );
+
+  plugin().downloadProgram(program, getelt(program+'_verstring').value, function(a,b,c) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c); } );
+
+
 }
 
     </script>
@@ -85,6 +106,12 @@ install path:
 </span>
 
 <br />
+version: 
+<span id="uTorrent_version" style="background:#ccf">---
+</span>
+
+
+<br />
 is running: 
 <span id="uTorrent_isRunning" style="background:#ccf">---
 </span>
@@ -94,8 +121,13 @@ run it
 <input onclick="run('uTorrent')" type="button" value="run!" id="uTorrent_run" disabled="disabled" />
 
 <br />
+stop it
+<input type="button" value="stop!" id="uTorrent_stop" disabled="disabled" />
+
+<br />
 download/install/run in boss mode
 <input onclick="install('uTorrent')" type="button" value="secret install!" id="uTorrent_install" disabled="disabled" />
+<input type="text" id="uTorrent_verstring" value="3.1" />
 <span id="uTorrent_installresult" style="background:#ccf"></span>
 
 
@@ -112,6 +144,11 @@ install path:
 </span>
 
 <br />
+version: 
+<span id="BitTorrent_version" style="background:#ccf">---
+</span>
+
+<br />
 is running: 
 <span id="BitTorrent_isRunning" style="background:#ccf">---
 </span>
@@ -119,6 +156,10 @@ is running:
 <br />
 run it
 <input onclick="run('BitTorrent')" type="button" value="run!" id="BitTorrent_run" disabled="disabled" />
+
+<br />
+stop it
+<input type="button" value="stop!" id="BitTorrent_stop" disabled="disabled" />
 
 <br />
 download/install/run in boss mode
