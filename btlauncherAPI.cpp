@@ -126,6 +126,11 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	syspath.append( program.c_str() );
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
+	syspath.append( _T("_") );
+	std::wstring wversion;
+	wversion.assign( version.begin(), version.end() );
+	syspath.append( wversion );
+	syspath.append( _T("_") );
 	syspath.append( boost::uuids::to_wstring(u) );
 	syspath.append(_T(".exe"));
 
@@ -168,7 +173,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
-
+#define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
 	std::string url;
@@ -181,9 +186,13 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		} else {
 			url = std::string(UT_DL);
 		}
-	} else {
+	} else if (wcsstr(program.c_str(), _T("BitTorrent"))) {
 		url = std::string(BT_DL);
+	} else if (wcsstr(program.c_str(), _T("Standalone"))) {
+		url = std::string(STANDALONE_DL);
 	}
+	
+	//url = version.c_str();
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
