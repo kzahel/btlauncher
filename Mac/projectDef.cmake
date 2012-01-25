@@ -32,7 +32,16 @@ set(LOCALIZED "Mac/bundle_template/Localized.r")
 
 add_mac_plugin(${PROJECT_NAME} ${PLIST} ${STRINGS} ${LOCALIZED} SOURCES)
 
+FIND_PACKAGE(LibXml2)
+
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
     ${PLUGIN_INTERNAL_DEPS}
+    ${LIBXML2_LIBRARIES}
     )
+
+#set(CMAKE_SHARED_LINKER_FLAGS "-lxml2")
+#SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-lxml2")
+#SET(CMAKE_LINKER_FLAGS ${CMAKE_LINKER_FLAGS} "-lxml2")
+#SET(LINK_FLAGS "-lxml2")
+include_directories("/usr/include/libxml2")

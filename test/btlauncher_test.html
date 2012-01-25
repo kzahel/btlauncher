@@ -65,7 +65,7 @@ function populatestuff(program) {
 }
 
 function run(program) {
-  plugin().runProgram(program);
+  plugin().runProgram(program, function() {});
 }
 
 
@@ -84,7 +84,7 @@ function install(program) {
     </script>
 <body>
 <div> the plugin --&gt;
-    <object id="plugin0" type="application/x-btlauncher" width="10" height="10">
+    <object id="plugin0" type="application/x-btlauncher" width="400" height="400">
       <param name="onload" value="pluginLoaded" />
     </object>
 </div>
@@ -166,10 +166,7 @@ download/install/run in boss mode
 <input onclick="install('BitTorrent')" type="button" value="secret install!" id="BitTorrent_install" disabled="disabled" />
 <span id="BitTorrent_installresult" style="background:#ccf"></span>
 
-
 </fieldset>
-
-
 
 </body>
 </html>
