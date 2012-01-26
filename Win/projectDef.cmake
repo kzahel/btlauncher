@@ -71,3 +71,5 @@ add_wix_installer( ${PLUGIN_NAME}
 #    "${CMAKE_CURRENT_SOURCE_DIR}/sign/certificate.pfx"
 #    "${CMAKE_CURRENT_SOURCE_DIR}/sign/passphrase.txt"
 #    "http://timestamp.verisign.com/scripts/timestamp.dll")
+
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Win")

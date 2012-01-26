@@ -11,7 +11,7 @@
 #include "variant_list.h"
 #include "DOM/Document.h"
 #include "global/config.h"
-#include "../btlauncherAPI.h"
+#include "btlauncherAPI.h"
 #include <map>
 #include <string>
 #include <assert.h>

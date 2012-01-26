@@ -13,7 +13,7 @@
 
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
-#include "btlauncher.h"
+#include "../btlauncher.h"
 #include "SystemHelpers.h"
 #include "SimpleStreamHelper.h"
 

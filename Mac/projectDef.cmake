@@ -40,8 +40,5 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBXML2_LIBRARIES}
     )
 
-#set(CMAKE_SHARED_LINKER_FLAGS "-lxml2")
-#SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-lxml2")
-#SET(CMAKE_LINKER_FLAGS ${CMAKE_LINKER_FLAGS} "-lxml2")
-#SET(LINK_FLAGS "-lxml2")
 include_directories("/usr/include/libxml2")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Mac")
