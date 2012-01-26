@@ -28,6 +28,7 @@
 /// @see FB::JSAPIAuto::registerProperty
 /// @see FB::JSAPIAuto::registerEvent
 ///////////////////////////////////////////////////////////////////////////////
+
 btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr& host) : m_plugin(plugin), m_host(host)
 {
     registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
@@ -38,6 +39,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
     // Read-write property
     registerProperty("testString",
                      make_property(this,
@@ -119,13 +121,18 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	TCHAR temppath[500];
 	DWORD gettempresult = GetTempPath(500, temppath);
 	if (! gettempresult) {
-		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
+		callback->InvokeAsync("", FB::variant_list_of(false)("GetTempPath")(GetLastError()));
 		return;
 	}
 	std::wstring syspath(temppath);
 	syspath.append( program.c_str() );
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
+	syspath.append( _T("_") );
+	std::wstring wversion;
+	wversion.assign( version.begin(), version.end() );
+	syspath.append( wversion );
+	syspath.append( _T("_") );
 	syspath.append( boost::uuids::to_wstring(u) );
 	syspath.append(_T(".exe"));
 
@@ -165,10 +172,86 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 
 }
 
+void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback, 
+									   bool success,
+									   const FB::HeaderMap& headers,
+									   const boost::shared_array<uint8_t>& data,
+									   const size_t size) {
+	if (! success) {
+		callback->InvokeAsync("", FB::variant_list_of(success));
+		return;
+	}
+	TCHAR temppath[500];
+	DWORD gettempresult = GetTempPath(500, temppath);
+	if (! gettempresult) {
+		callback->InvokeAsync("", FB::variant_list_of(false)("GetTempPath")(GetLastError()));
+		return;
+	}
+	std::wstring syspath(temppath);
+	syspath.append( _T("btlaunch") );
+	boost::uuids::random_generator gen;
+	boost::uuids::uuid u = gen();
+	syspath.append( _T("_") );
+	syspath.append( boost::uuids::to_wstring(u) );
+	syspath.append(_T(".msi"));
+
+	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
+	if (hFile == INVALID_HANDLE_VALUE) {
+		callback->InvokeAsync("", FB::variant_list_of(false)("CreateFile")(GetLastError()));
+		return;
+	}
+	PVOID ptr = (VOID*) data.get();
+	DWORD written = 0;
+	BOOL RESULT = WriteFile( hFile, ptr, size, &written, NULL);
+	CloseHandle(hFile);
+	
+	if (! RESULT) {
+		callback->InvokeAsync("", FB::variant_list_of("WriteFile")(false)(GetLastError()));
+		return;
+	}
+	std::wstring installcommand = std::wstring(_T("msiexec.exe /I "));
+	installcommand.append( std::wstring(syspath) );
+	installcommand.append( _T(" /q") );
+	//installcommand.append(_T(" /NOINSTALL /MINIMIZED /HIDE"));
+	STARTUPINFO info;
+	PROCESS_INFORMATION procinfo;
+	memset(&info,0,sizeof(info));
+	info.cb = sizeof(STARTUPINFO);
+	 
+	/* CreateProcessW can modify installcommand thus we allocate needed memory */ 
+	wchar_t * pwszParam = new wchar_t[installcommand.size() + 1]; 
+	const wchar_t* pchrTemp = installcommand.c_str(); 
+    wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
+
+	BOOL bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	if(bProc) {
+		callback->InvokeAsync("", FB::variant_list_of("CreateProcess")(true)(installcommand.c_str())(GetLastError()));
+	} else {
+		callback->InvokeAsync("", FB::variant_list_of("CreateProcess")(false)(installcommand.c_str())(GetLastError()));
+	}
+}
+
+void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
+	std::string url = std::string("http://10.10.90.24:9090/static/btlauncher.msi?v=");
+	url.append( std::string(FBSTRING_PLUGIN_VERSION) );
+
+	
+	SYSTEMTIME lpTime;
+	GetSystemTime(&lpTime);
+	char str[1024];
+	sprintf(str,"&_t=%d",(lpTime.wSecond + 1000 * lpTime.wMilliseconds));
+	url.append(str);
+
+	//url.append( itoa(lpTime->wMilliseconds, buf, 10) );
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4)
+		);
+
+}
 
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
-
+#define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
 	std::string url;
@@ -181,9 +264,13 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		} else {
 			url = std::string(UT_DL);
 		}
-	} else {
+	} else if (wcsstr(program.c_str(), _T("BitTorrent"))) {
 		url = std::string(BT_DL);
+	} else if (wcsstr(program.c_str(), _T("Standalone"))) {
+		url = std::string(STANDALONE_DL);
 	}
+	
+	//url = version.c_str();
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
