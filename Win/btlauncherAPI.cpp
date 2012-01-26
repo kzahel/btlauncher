@@ -251,6 +251,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
+#define LV_DL "http://s3.amazonaws.com/live-installer/BTLive.exe"
 #define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
@@ -268,6 +269,8 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		url = std::string(BT_DL);
 	} else if (wcsstr(program.c_str(), _T("Standalone"))) {
 		url = std::string(STANDALONE_DL);
+	} else {
+		url = std::string(LV_DL);
 	}
 	
 	//url = version.c_str();
@@ -278,13 +281,13 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 }
 
 
-std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key) {
+std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key, HKEY parentKey) {
 	CRegKey regKey;
 	const CString REG_SW_GROUP = path.c_str();
 	TCHAR szBuffer[bufsz];
 	ULONG cchBuffer = bufsz;
 	LONG RESULT;
-	RESULT = regKey.Open(HKEY_LOCAL_MACHINE, REG_SW_GROUP, KEY_READ);
+	RESULT = regKey.Open(parentKey, REG_SW_GROUP, KEY_READ);
 	if (RESULT == ERROR_SUCCESS) {
 		RESULT = regKey.QueryStringValue( key.c_str(), szBuffer, &cchBuffer );
 		regKey.Close();
@@ -302,16 +305,28 @@ std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key
 
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	return getRegStringValue( reg_group, _T("DisplayVersion") );
+	HKEY parentKey = HKEY_LOCAL_MACHINE;
+	if (program == _T("BTLive")) {
+		parentKey = HKEY_CURRENT_USER;
+	}
+	return getRegStringValue( reg_group, _T("DisplayVersion"), parentKey );
 }
 std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {	
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	return getRegStringValue( reg_group, _T("InstallLocation") );
+	HKEY parentKey = HKEY_LOCAL_MACHINE;
+	if (program == _T("BTLive")) {
+		parentKey = HKEY_CURRENT_USER;
+	}
+	return getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
 }
 
 std::wstring getExecutablePath(const std::wstring& program) {
+	HKEY parentKey = HKEY_LOCAL_MACHINE;
+	if (program == _T("BTLive")) {
+		parentKey = HKEY_CURRENT_USER;
+	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation") );
+	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
 	location.append( _T("\\") );
 	location.append( program );
 	location.append( _T(".exe") );

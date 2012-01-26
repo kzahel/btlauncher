@@ -7,6 +7,9 @@
 </head>
 <script type="text/javascript">
 
+if (! window.console) {
+  window.console = { log: function() {} };
+}
 var WINDOW_HASH = '4823';
 
   function getelt(id) {
@@ -21,12 +24,21 @@ var WINDOW_HASH = '4823';
 
         function pluginLoaded() {
           console.log('plugin loaded');
-          getelt('loaded').innerHTML = 'plugin loaded ok';
+          getelt('loaded').innerHTML = 'plugin loaded ok, v:' + plugin().version;
+
+getelt('checkupdate_div').setAttribute('style','display:block');
+
+          getelt('checkupdate').onclick = function(evt) {
+  plugin().checkForUpdate( function(a,b,c,d) {
+   getelt('checkupdate_response').innerHTML = a+' '+b+' '+c+' '+d;
+  });
+}
 
           populatestuff('uTorrent');
           populatestuff('BitTorrent');
 
         }
+
 
 
 function populatestuff(program) {
@@ -65,7 +77,7 @@ function populatestuff(program) {
 }
 
 function run(program) {
-  plugin().runProgram(program);
+  plugin().runProgram(program, function() {});
 }
 
 
@@ -84,16 +96,22 @@ function install(program) {
     </script>
 <body>
 <div> the plugin --&gt;
-    <object id="plugin0" type="application/x-btlauncher" width="10" height="10">
+    <object id="plugin0" type="application/x-btlauncher" width="400" height="400">
       <param name="onload" value="pluginLoaded" />
     </object>
 </div>
 <br />
 
+<div id="checkupdate_div" style="display:none">
+<a id="checkupdate" href="#">check for update</a>
+<span id="checkupdate_response"></span>
+</div>
 
 <br />
 plugin loaded: 
 <span id="loaded">not yet
+
+<a href="btlauncher.msi">install it</a>
 </span>
 
 
@@ -166,10 +184,7 @@ download/install/run in boss mode
 <input onclick="install('BitTorrent')" type="button" value="secret install!" id="BitTorrent_install" disabled="disabled" />
 <span id="BitTorrent_installresult" style="background:#ccf"></span>
 
-
 </fieldset>
-
-
 
 </body>
 </html>
