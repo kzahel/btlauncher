@@ -138,6 +138,14 @@ int btlauncherAPI::GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
     return err;
 }
 
+static void child_handler(int sig)
+{
+    pid_t pid;
+    int status;
+    while((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr host)
 ///
@@ -174,6 +182,13 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
     FSRefMakePath( &ref, (UInt8*)&path, PATH_MAX );
 	
 	this->installPath = string(path);
+	
+	/* Establish handler to clean up child processes otherwise Live will live on as a zombie! */
+	struct sigaction sa;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	sa.sa_handler = child_handler;
+	sigaction(SIGCHLD, &sa, NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -223,6 +238,8 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 {
     fire_fired(var, true, 1);
 }
+
+
 #define bufsz 2048
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::string& program,
@@ -259,6 +276,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 			break;
 	}
 }
+
 
 void btlauncherAPI::downloadProgram(const std::string& program, const std::string& version, const FB::JSObjectPtr& callback) {
 
@@ -423,5 +441,8 @@ int btlauncherAPI::isLiveRunning() {
 }
 
 FB::variant btlauncherAPI::isRunning(const std::string& val) {
-	return this->isLiveRunning() ? "BTLive" : "";
+	FB::VariantList list;
+	
+	if (this->isLiveRunning()) list.push_back(true);
+	return list;
 }
