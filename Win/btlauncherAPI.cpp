@@ -251,7 +251,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
-#define LV_DL "http://s3.amazonaws.com/live-installer/BTLive.exe"
+#define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
 #define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
@@ -340,8 +340,10 @@ HINSTANCE launch_program(const std::wstring& program) {
 	return result;
 }
 
-FB::variant btlauncherAPI::runProgram(const std::wstring& program) {
-	return launch_program(program);
+FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+	HINSTANCE ret = launch_program(program);
+	callback->InvokeAsync("", FB::variant_list_of(false)(ret));
+	return ret;
 }
 
 

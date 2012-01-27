@@ -53,7 +53,7 @@ public:
 									   const size_t size);
 	std::wstring getInstallPath(const std::wstring& val);
 	std::wstring getInstallVersion(const std::wstring& val);
-	FB::variant runProgram(const std::wstring& val);
+	FB::variant runProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
 	FB::variant isRunning(const std::wstring& val);
 	FB::VariantList stopRunning(const std::wstring& val);
 
