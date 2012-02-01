@@ -37,7 +37,7 @@ getelt('checkupdate_div').setAttribute('style','display:block');
           populatestuff('uTorrent');
           populatestuff('BitTorrent');
           populatestuff('Torque');
-
+          populatestuff('BTLive');
         }
 
 
@@ -236,6 +236,40 @@ download/install/run in boss mode
 
 
 
+
+<fieldset>
+<legend>Live</legend>
+
+<br />
+install path: 
+<span id="BTLive_installPath" style="background:#ccf">---
+</span>
+
+<br />
+version: 
+<span id="BTLive_version" style="background:#ccf">---
+</span>
+
+<br />
+is running: 
+<span id="BTLive_isRunning" style="background:#ccf">---
+</span>
+
+<br />
+run it
+<input onclick="run('BTLive')" type="button" value="run!" id="BTLive_run" disabled="disabled" />
+
+<br />
+stop it
+<input type="button" value="stop!" id="BTLive_stop" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('BTLive')" type="button" value="secret install!" id="BTLive_install" disabled="disabled" />
+<span id="BTLive_installresult" style="background:#ccf"></span>
+<input type="text" id="BTLive_verstring" value="3.1" />
+
+</fieldset>
 
 
 </body>

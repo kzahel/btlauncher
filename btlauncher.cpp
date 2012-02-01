@@ -7,7 +7,11 @@
 
 \**********************************************************/
 
+#ifdef FB_WIN
+#include "Win/btlauncherAPI.h"
+#else
 #include "btlauncherAPI.h"
+#endif
 
 #include "btlauncher.h"
 
