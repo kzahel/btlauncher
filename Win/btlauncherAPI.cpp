@@ -252,7 +252,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 #define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
 #define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
-#define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
+#define TORQUE_DL "http://pwmckenna.com/files/torque.exe"
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
 	std::string url;
@@ -267,8 +267,8 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		}
 	} else if (wcsstr(program.c_str(), _T("BitTorrent"))) {
 		url = std::string(BT_DL);
-	} else if (wcsstr(program.c_str(), _T("Standalone"))) {
-		url = std::string(STANDALONE_DL);
+	} else if (wcsstr(program.c_str(), _T("Torque"))) {
+		url = std::string(TORQUE_DL);
 	} else {
 		url = std::string(LV_DL);
 	}
