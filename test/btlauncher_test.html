@@ -80,7 +80,7 @@ function populatestuff(program) {
 }
 
 function run(program) {
-  plugin().runProgram(program);
+  plugin().runProgram(program, function(r) { console.log('run response',r); } );
 }
 
 
