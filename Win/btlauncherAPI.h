@@ -5,7 +5,11 @@
 \**********************************************************/
 
 #include <string>
-#include <sstream>
+#include <stdio.h>
+#include <string.h>
+#include <atlbase.h>
+#include <atlstr.h>
+#include <string.h>
 #include <boost/weak_ptr.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -59,7 +63,8 @@ public:
     void testEvent(const FB::variant& s);
 
 private:
-	bool isSupported(std::string program);
+	bool isSupported(std::wstring program);
+
 	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									std::wstring& program,
 									std::string& version,

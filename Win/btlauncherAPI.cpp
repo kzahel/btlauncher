@@ -32,6 +32,8 @@
 #define BITTORRENT_NAME "BitTorrent"
 #define TORQUE_NAME "Torque"
 
+#define NOT_SUPPORTED_MESSAGE "This application is not supported."
+
 //#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -316,6 +318,9 @@ std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key
 }
 
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
 	HKEY parentKey = HKEY_LOCAL_MACHINE;
 	if (program == _T("BTLive")) {
@@ -323,7 +328,10 @@ std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {
 	}
 	return getRegStringValue( reg_group, _T("DisplayVersion"), parentKey );
 }
-std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {	
+std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
 	HKEY parentKey = HKEY_LOCAL_MACHINE;
 	if (program == _T("BTLive")) {
@@ -353,6 +361,10 @@ HINSTANCE launch_program(const std::wstring& program) {
 }
 
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
+	
 	HINSTANCE ret = (HINSTANCE)0;
 	if (isRunning(program).size() == 0) {
 		ret = launch_program(program);
@@ -415,8 +427,9 @@ FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
 	return cbdata.list;	
 }
 
-bool isSupported(std::string program) {
-	if (program == LIVE_NAME) {
+bool btlauncherAPI::isSupported(std::wstring program) {
+
+	if (program == _T(LIVE_NAME) || program == _T(UTORRENT_NAME) || program == _T(BITTORRENT_NAME) || program == _T(TORQUE_NAME)) {
 		return true;
 	}
 	return false;
