@@ -36,6 +36,7 @@ getelt('checkupdate_div').setAttribute('style','display:block');
 
           populatestuff('uTorrent');
           populatestuff('BitTorrent');
+          populatestuff('Torque');
           populatestuff('BTLive');
         }
 
@@ -47,6 +48,8 @@ function populatestuff(program) {
 
  if (program == 'uTorrent') {
    var window_name = 'Torrent' + WINDOW_HASH;
+ } else if (program == 'Torque') {
+   var window_name = 'Torque' + WINDOW_HASH;
  } else if (program == 'BitTorrent') {
    var window_name = 'BT' + WINDOW_HASH;
  } else {
@@ -77,7 +80,7 @@ function populatestuff(program) {
 }
 
 function run(program) {
-  plugin().runProgram(program, function() {});
+  plugin().runProgram(program, function(r) { console.log('run response',r); } );
 }
 
 
@@ -87,8 +90,9 @@ function stop(program) {
 }
 
 function install(program) {
-
-  plugin().downloadProgram(program, getelt(program+'_verstring').value, function(a,b,c) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c); } );
+  var verstring = '';
+  //var verstring = getelt(program+'_verstring').value;
+  plugin().downloadProgram(program, verstring, function(a,b,c,d) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c + ' ' + d); } );
 
 
 }
@@ -96,7 +100,7 @@ function install(program) {
     </script>
 <body>
 <div> the plugin --&gt;
-    <object id="plugin0" type="application/x-btlauncher" width="400" height="400">
+    <object id="plugin0" type="application/x-btlauncher" width="5" height="5">
       <param name="onload" value="pluginLoaded" />
     </object>
 </div>
@@ -111,8 +115,51 @@ function install(program) {
 plugin loaded: 
 <span id="loaded">not yet
 
-<a href="btlauncher.msi">install it</a>
+<a href="btlauncher.msi">install the plugin</a>
 </span>
+
+
+
+<fieldset>
+<legend>Torque</legend>
+
+
+<div style="display:none">
+<br />
+install path: 
+<span id="Torque_installPath" style="background:#ccf">---
+</span>
+
+<br />
+version: 
+<span id="Torque_version" style="background:#ccf">---
+</span>
+</div>
+
+<br />
+is running: 
+<span id="Torque_isRunning" style="background:#ccf">---
+</span>
+
+<div style="display:none">
+<br />
+run it
+<input onclick="run('Torque')" type="button" value="run!" id="Torque_run" disabled="disabled" />
+</div>
+
+<br />
+stop it
+<input type="button" value="stop!" id="Torque_stop" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('Torque')" type="button" value="secret install!" id="Torque_install" disabled="disabled" />
+<input type="text" id="Torque_verstring" value="7.2" />
+<span id="Torque_installresult" style="background:#ccf"></span>
+
+</fieldset>
+
+
 
 
 <fieldset>
@@ -182,6 +229,7 @@ stop it
 <br />
 download/install/run in boss mode
 <input onclick="install('BitTorrent')" type="button" value="secret install!" id="BitTorrent_install" disabled="disabled" />
+<input type="text" id="BitTorrent_verstring" value="7.2" />
 <span id="BitTorrent_installresult" style="background:#ccf"></span>
 
 </fieldset>
@@ -222,6 +270,7 @@ download/install/run in boss mode
 <input type="text" id="BTLive_verstring" value="3.1" />
 
 </fieldset>
+
 
 </body>
 </html>
