@@ -44,17 +44,10 @@ public:
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size);
 	void downloadProgram(const std::wstring& val, const std::string& version, const FB::JSObjectPtr& callback);
-	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
-										std::wstring& program,
-										std::string& version,
-									   bool success,
-									   const FB::HeaderMap& headers,
-									   const boost::shared_array<uint8_t>& data,
-									   const size_t size);
 	std::wstring getInstallPath(const std::wstring& val);
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
-	FB::variant isRunning(const std::wstring& val);
+	FB::VariantList isRunning(const std::wstring& val);
 	FB::VariantList stopRunning(const std::wstring& val);
 
     // Event helpers
@@ -66,6 +59,14 @@ public:
     void testEvent(const FB::variant& s);
 
 private:
+	bool isSupported(std::string program);
+	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
+									std::wstring& program,
+									std::string& version,
+									bool success,
+									const FB::HeaderMap& headers,
+									const boost::shared_array<uint8_t>& data,
+									const size_t size);
     btlauncherWeakPtr m_plugin;
     FB::BrowserHostPtr m_host;
 

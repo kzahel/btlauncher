@@ -10,13 +10,29 @@
 #include "global/config.h"
 #include "btlauncherAPI.h"
 #include "windows.h"
-   #include <map>
-    #include <string>
-    #include <stdio.h>
-    #include <string.h>
+#include <map>
+#include <string>
+#include <stdio.h>
+#include <string.h>
 #include <atlbase.h>
 #include <atlstr.h>
 #include <string.h>
+
+#define bufsz 2048
+#define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
+#define BTLIVE_CODE "BTLive"
+#define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
+#define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
+#define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
+#define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
+#define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
+
+#define LIVE_NAME "BTLive"
+#define UTORRENT_NAME "uTorrent"
+#define BITTORRENT_NAME "BitTorrent"
+#define TORQUE_NAME "Torque"
+
+//#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr host)
@@ -110,7 +126,7 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 {
     fire_fired(var, true, 1);
 }
-#define bufsz 2048
+
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
 									   std::string& version,
@@ -249,11 +265,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 }
 
-#define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
-#define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
-#define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
-#define STANDALONE_DL "http://www.pwmckenna.com/projects/btapp/bittorrent/utorrent.exe"
-//#define UT_DL "http://192.168.56.1:9090/static/utorrent.exe"
+
 void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
 	std::string url;
 
@@ -269,8 +281,10 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		url = std::string(BT_DL);
 	} else if (wcsstr(program.c_str(), _T("Standalone"))) {
 		url = std::string(STANDALONE_DL);
-	} else {
+	} else if (wcsstr(program.c_str(), _T("BTLive"))) { 
 		url = std::string(LV_DL);
+	} else {
+	  return;
 	}
 	
 	//url = version.c_str();
@@ -300,8 +314,6 @@ std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key
 		return std::wstring(_T(""));
 	}
 }
-
-#define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
 
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
@@ -341,14 +353,14 @@ HINSTANCE launch_program(const std::wstring& program) {
 }
 
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
-	HINSTANCE ret = launch_program(program);
-	callback->InvokeAsync("", FB::variant_list_of(false)(ret));
+	HINSTANCE ret = (HINSTANCE)0;
+	if (isRunning(program).size() == 0) {
+		ret = launch_program(program);
+		callback->InvokeAsync("", FB::variant_list_of(false)(ret));
+	}
 	return ret;
 }
 
-
-
-TCHAR classname[50];
 struct callbackdata {
 	callbackdata() {
 		found = FALSE;
@@ -358,6 +370,7 @@ struct callbackdata {
 	FB::VariantList list;
 };
 
+TCHAR classname[50];
 BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 	GetClassName(hWnd, classname, sizeof(classname));
 	callbackdata* cbdata = (callbackdata*) lParam;
@@ -373,29 +386,41 @@ BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 
 FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
 	FB::VariantList list;
-	HWND hWnd = FindWindow( val.c_str(), NULL );
-	DWORD pid;
-	DWORD parent;
-	parent = GetWindowThreadProcessId(hWnd, &pid);
-	HANDLE pHandle = OpenProcess(PROCESS_TERMINATE, NULL, pid);
-	if (! pHandle) {
-		list.push_back("could not open process");
-		list.push_back(GetLastError());
-	} else {
-		BOOL result = TerminateProcess(pHandle, 0);
-		list.push_back("ok");
-		list.push_back(result);
+	if (wcsstr(val.c_str(), _T(BT_HEXCODE)) || wcsstr(val.c_str(), _T(BTLIVE_CODE))) {
+		HWND hWnd = FindWindow( val.c_str(), NULL );
+		DWORD pid;
+		DWORD parent;
+		parent = GetWindowThreadProcessId(hWnd, &pid);
+		HANDLE pHandle = OpenProcess(PROCESS_TERMINATE, NULL, pid);
+		if (! pHandle) {
+			list.push_back("could not open process");
+			list.push_back(GetLastError());
+		} else {
+			BOOL result = TerminateProcess(pHandle, 0);
+			list.push_back("ok");
+			list.push_back(result);
+		}
 	}
 	return list;
 }
 
-FB::variant btlauncherAPI::isRunning(const std::wstring& val) {
+FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
 	FB::VariantList list;
 	callbackdata cbdata;
 	cbdata.list = list;
 	cbdata.name = val;
-	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
-	return cbdata.list;
+	if (wcsstr(val.c_str(), _T(BT_HEXCODE)) || wcsstr(val.c_str(), _T(BTLIVE_CODE))) {
+		EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
+	}
+	return cbdata.list;	
 }
+
+bool isSupported(std::string program) {
+	if (program == LIVE_NAME) {
+		return true;
+	}
+	return false;
+}
+
 
 //FB::variant btlauncherAPI::launchClient(const std::
