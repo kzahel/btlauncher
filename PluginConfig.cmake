@@ -34,7 +34,7 @@ set(MOZILLA_PLUGINID "bittorrent.com/btlauncher")
 # strings
 set(FBSTRING_CompanyName "BitTorrent, Inc")
 set(FBSTRING_FileDescription "Launches BitTorrent standalone application")
-set(FBSTRING_PLUGIN_VERSION "0.0.2.0")
+set(FBSTRING_PLUGIN_VERSION "0.0.2.1")
 set(FBSTRING_LegalCopyright "Copyright 2012 BitTorrent, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "BitTorrent Launcher")
