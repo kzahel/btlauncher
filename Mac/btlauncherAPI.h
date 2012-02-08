@@ -69,12 +69,14 @@ public:
 private:
 	int isInstalledAndUpToDate();
 	int isLiveRunning();
-    btlauncherWeakPtr m_plugin;
-    FB::BrowserHostPtr m_host;
+    void getInstalledVersion();
 	int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);
 
     pid_t m_live_pid;
 	std::string installPath;
+    std::string liveVersion;
+    btlauncherWeakPtr m_plugin;
+    FB::BrowserHostPtr m_host;
 };
 
 #endif // H_btlauncherAPI

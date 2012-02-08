@@ -39,10 +39,10 @@
 #include <boost/lexical_cast.hpp>
 using namespace std;
 
-
 #define BTLIVE_INFO_PATH "/BTLive.app/Contents/Info.plist"
 #define BTLIVE_EXE_PATH "/BTLive.app/Contents/MacOS/BTLive"
 #define LATEST_LIVE_VERSION 43107
+#define UNKNOWN_VERSION "unknown"
 
 int btlauncherAPI::GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
 // Returns a list of all BSD processes on the system.  This routine
@@ -182,6 +182,8 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
     FSRefMakePath( &ref, (UInt8*)&path, PATH_MAX );
 	
 	this->installPath = string(path);
+    
+    this->getInstalledVersion();
 	
 	/* Establish handler to clean up child processes otherwise Live will live on as a zombie! */
 	struct sigaction sa;
@@ -248,7 +250,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
-	printf("\nIn GotDownloadProgram\n");
+	//printf("\nIn GotDownloadProgram\n");
 	char *tmpname = strdup("/tmp/btliveXXXXXX");
 	mkstemp(tmpname);
 	ofstream f(tmpname);
@@ -307,7 +309,7 @@ std::string btlauncherAPI::getInstallVersion(const std::string& program) {
 	std::string reg_group = std::string(INSTALL_REG_PATH).append( program );
 	return getRegStringValue( reg_group, _T("DisplayVersion") );
 	*/
-	return "LATEST_LIVE_VERSION";
+	return this->liveVersion;
 }
 std::string btlauncherAPI::getInstallPath(const std::string& program) {	
 	/*
@@ -317,9 +319,8 @@ std::string btlauncherAPI::getInstallPath(const std::string& program) {
 	return this->installPath;
 }
 
-
-int btlauncherAPI::isInstalledAndUpToDate() {
-	xmlDocPtr doc;
+void btlauncherAPI::getInstalledVersion() {
+    xmlDocPtr doc;
 	xmlNodePtr cur;
 	
 	string liveInfo = this->installPath + string(BTLIVE_INFO_PATH);
@@ -327,16 +328,18 @@ int btlauncherAPI::isInstalledAndUpToDate() {
 	doc = xmlParseFile(liveInfo.c_str());
 	
 	if(!doc) {
-		return 0;
+        this->liveVersion = string(UNKNOWN_VERSION);
+		return;
 	}
 	
-	printf("Live exists on OSX");
+	//printf("Live exists on OSX");
 	
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
 		fprintf(stderr,"Live Info.Plist is an empty document\n");
+        this->liveVersion = string(UNKNOWN_VERSION);
 		xmlFreeDoc(doc);
-		return 0;
+		return;
 	}
 	
 	xmlXPathContextPtr context = xmlXPathNewContext(doc);
@@ -344,40 +347,45 @@ int btlauncherAPI::isInstalledAndUpToDate() {
 	xmlXPathObjectPtr result = xmlXPathEvalExpression(xpath, context);
 	
 	if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
-		printf("Live has no xpath result\n");
-		return 0;
+        this->liveVersion = string(UNKNOWN_VERSION);
+		return;
 	}
 	
 	xmlNodeSetPtr nodeSetPtr = result->nodesetval;
 	xmlNodePtr curNode;
 	curNode = nodeSetPtr->nodeTab[0];
-	printf("\nXPATH Node child content: %s", (char *)curNode->children[0].content);
+	//printf("\nXPATH Node child content: %s", (char *)curNode->children[0].content);
 	
-	string liveVersion((char *)curNode->children[0].content);
-	boost::algorithm::erase_all(liveVersion,".");
+	this->liveVersion = string((char *)curNode->children[0].content);
+    //string liveVersion((char *)curNode->children[0].content);
+	/*
+    boost::algorithm::erase_all(liveVersion,".");
 	
 	int liveVersionInt = 0;
 	
 	try {
 		liveVersionInt = boost::lexical_cast<int>( liveVersion.c_str() );
 	} catch( boost::bad_lexical_cast const& ) {
-		printf("Live could not convert version number to int");
-		return 0;
+		//printf("Live could not convert version number to int");
 	}
-	
-	printf("\nLive Version read is %d\n", liveVersionInt);
-	if (liveVersionInt < LATEST_LIVE_VERSION) {
-		printf("Live is out of date.");
-		return 0;
-	}
+    */
+}
+
+
+int btlauncherAPI::isInstalledAndUpToDate() {	
+	//printf("\nLive Version read is %d\n", liveVersionInt);
+	//if (this->liveVersionInt < LATEST_LIVE_VERSION) {
+		//printf("Live is out of date.");
+	//	return 0;
+	//}
 	
 	return 1;
 }
 
 
 FB::variant btlauncherAPI::runProgram(const std::string& program, const FB::JSObjectPtr& callback) {
-	printf("in runProgram");
-	if (this->isInstalledAndUpToDate()) {
+    //Live is now responsible for updating itself
+	//if (this->isInstalledAndUpToDate()) {
 		if(!this->isLiveRunning()) {
 			
 			switch(this->m_live_pid = fork()) 
@@ -389,42 +397,44 @@ FB::variant btlauncherAPI::runProgram(const std::string& program, const FB::JSOb
 				}
 				case 0: {
 					string liveExe = this->installPath + string(BTLIVE_EXE_PATH);
-					printf("Opening %s\n", liveExe.c_str());
+					//printf("Opening %s\n", liveExe.c_str());
 					execlp(liveExe.c_str(), liveExe.c_str(), NULL);
 					break;
 				}
 				default: {
-					printf("Running Live in child process. %d\n", this->m_live_pid);
+					//printf("Running Live in child process. %d\n", this->m_live_pid);
 					break;
 				}
 			}
 		}
-	}
-	else {
-		this->downloadProgram(program, string(""), callback);
-		//downloadProgram(const std::string& program, const std::string& version, const FB::JSObjectPtr& callback)
-	}
+	//}
+	//else {
+	//	this->downloadProgram(program, string(""), callback);
+	//}
 	return 0;
 }
 
 FB::VariantList btlauncherAPI::stopRunning(const std::string& val) {
 	FB::VariantList list;
-	if (this->isLiveRunning()) {
-		printf("Its running, killing Live\n");
-		//This dosent work for now because pyinstaller spawns a subprocess that just gets orphaned when the parent is killed
-		//So Im just going to system call killall right now
-		/*
-		int ret;
-		ret = killpg(this->m_live_pid, SIGTERM);
-		list.push_back(ret);
-		this->m_live_pid = 0;
-		printf("Sent kill\n");
-		*/
-		system("killall -9 BTLive");
+    bool foundIt = false;
+
+    size_t procCount = 0;
+    kinfo_proc *procList = NULL;
+    GetBSDProcessList(&procList, &procCount);
+    int i;
+    for (i = 0; i < procCount; i++) {
+        if (!strcmp(procList[i].kp_proc.p_comm, "BTLive")) {
+            kill(procList[i].kp_proc.p_pid, SIGKILL);
+            foundIt = true;
+        }
+    }
+
+    if (foundIt) {
+        list.push_back("ok");
+	} else {
+        list.push_back("could not open process");
 	}
-	
-	list.push_back(-1);
-	return list;
+    return list;
 }
 
 int btlauncherAPI::isLiveRunning() {
@@ -442,7 +452,20 @@ int btlauncherAPI::isLiveRunning() {
 
 FB::variant btlauncherAPI::isRunning(const std::string& val) {
 	FB::VariantList list;
-	
-	if (this->isLiveRunning()) list.push_back(true);
+    //This could be used when uTorrent or Torque is added
+    /*
+    size_t procCount = 0;
+	kinfo_proc *procList = NULL;
+	GetBSDProcessList(&procList, &procCount);
+	int i;
+	for (i = 0; i < procCount; i++) {
+		if (!strcmp(procList[i].kp_proc.p_comm, val.c_str())) {
+			list.push_back(procList[i].kp_proc.p_comm);
+		}
+	}*/
+    if (this->isLiveRunning()) {
+        list.push_back("BTLive");
+    }
+    
 	return list;
 }
