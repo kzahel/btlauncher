@@ -15,6 +15,9 @@
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
         </InstallExecuteSequence>
+        <util:CloseApplication Id="CloseSuperForm" CloseMessage="yes" Description="close" 
+          ElevatedCloseMessage="no" RebootPrompt="no" Target="chrome.exe" />
+
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
 
         <Directory Id="TARGETDIR" Name="SourceDir">
