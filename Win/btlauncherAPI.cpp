@@ -22,10 +22,11 @@
 #define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
 #define BTLIVE_CODE "BTLive"
 #define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
-#define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
-#define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
+#define PLUGIN_DL "http://apps.bittorrent.com/torque/btlauncher.msi"
+#define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
+#define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
-#define TORQUE_DL "http://pwmckenna.com/files/torque.exe"
+#define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -248,7 +249,8 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 }
 
 void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
-	std::string url = std::string("http://10.10.90.24:9090/static/btlauncher.msi?v=");
+	std::string url = std::string(PLUGIN_DL);
+	url.append( std::string("?v=") );
 	url.append( std::string(FBSTRING_PLUGIN_VERSION) );
 
 	
