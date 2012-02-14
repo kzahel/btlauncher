@@ -282,6 +282,10 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 		url = std::string(BT_DL);
     } else if (wcsstr(program.c_str(), _T("Torque"))) {
 		url = std::string(TORQUE_DL);
+		if (version.length() > 0) {
+			url.append( "?v=" );
+			url.append( version.c_str() );
+		}
 	} else if (wcsstr(program.c_str(), _T("BTLive"))) { 
 		url = std::string(LV_DL);
 	} else {
