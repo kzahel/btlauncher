@@ -90,8 +90,13 @@ function stop(program) {
 }
 
 function install(program) {
+if (program == 'Torque') {
+  var verstring = getelt(program+'_verstring').value;
+} else {
   var verstring = '';
-  //var verstring = getelt(program+'_verstring').value;
+}
+
+
   plugin().downloadProgram(program, verstring, function(a,b,c,d) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c + ' ' + d); } );
 
 
