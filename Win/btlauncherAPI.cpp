@@ -325,31 +325,30 @@ std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
+	std::wstring ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_LOCAL_MACHINE );
+	if (ret.empty()) {
+		ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_CURRENT_USER );
 	}
-	return getRegStringValue( reg_group, _T("DisplayVersion"), parentKey );
+	return ret;
 }
 std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
+	std::wstring ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
+	if (ret.empty()) {
+		ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER );
 	}
-	return getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
+	return ret;
 }
 
 std::wstring getExecutablePath(const std::wstring& program) {
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
-	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
+	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
+	if(location.empty) {
+		location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER ); 
+	}
 	location.append( _T("\\") );
 	location.append( program );
 	location.append( _T(".exe") );
