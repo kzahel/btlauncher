@@ -130,7 +130,6 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
-									   std::string& version,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
@@ -147,7 +146,6 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	boost::uuids::uuid u = gen();
 	syspath.append( _T("_") );
 	std::wstring wversion;
-	wversion.assign( version.begin(), version.end() );
 	syspath.append( wversion );
 	syspath.append( _T("_") );
 	syspath.append( boost::uuids::to_wstring(u) );
@@ -169,7 +167,6 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		return;
 	}
 	std::wstring installcommand = std::wstring(syspath);
-	installcommand.append(_T(" /NOINSTALL /MINIMIZED /HIDE"));
 	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
 	memset(&info,0,sizeof(info));
@@ -267,25 +264,15 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 }
 
-void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
+void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
 	std::string url;
 
 	if (wcsstr(program.c_str(), _T("uTorrent"))) {
-		if (version.length() > 0) {
-			url = std::string("http://download.utorrent.com/");
-			url.append( version.c_str() );
-			url.append( "/utorrent.exe" );
-		} else {
-			url = std::string(UT_DL);
-		}
+		url = std::string(UT_DL);
 	} else if (wcsstr(program.c_str(), _T("BitTorrent"))) {
 		url = std::string(BT_DL);
     } else if (wcsstr(program.c_str(), _T("Torque"))) {
 		url = std::string(TORQUE_DL);
-		if (version.length() > 0) {
-			url.append( "?v=" );
-			url.append( version.c_str() );
-		}
 	} else if (wcsstr(program.c_str(), _T("BTLive"))) { 
 		url = std::string(LV_DL);
 	} else {
@@ -295,8 +282,8 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 	//url = version.c_str();
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
-		);
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
+	);
 }
 
 
