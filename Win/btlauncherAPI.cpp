@@ -346,7 +346,7 @@ std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
 std::wstring getExecutablePath(const std::wstring& program) {
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
 	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
-	if(location.empty) {
+	if(location.empty()) {
 		location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER ); 
 	}
 	location.append( _T("\\") );
