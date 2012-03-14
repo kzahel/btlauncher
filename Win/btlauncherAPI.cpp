@@ -56,6 +56,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
     // Read-write property
     registerProperty("testString",
@@ -261,7 +262,48 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4)
 		);
+}
 
+void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
+	if (FB::URI::fromString(url).domain != "127.0.0.1") {
+		FB::VariantMap response;
+		response["allowed"] = false;
+		response["success"] = false;
+		callback->InvokeAsync("", FB::variant_list_of(response));
+		return;
+	}
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
+		);
+}
+
+void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback, 
+							bool success,
+						    const FB::HeaderMap& headers,
+						    const boost::shared_array<uint8_t>& data,
+						    const size_t size) {
+	FB::VariantMap outHeaders;
+	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+        if (headers.count(it->first) > 1) {
+            if (outHeaders.find(it->first) != outHeaders.end()) {
+                outHeaders[it->first].cast<FB::VariantList>().push_back(it->second);
+            } else {
+                outHeaders[it->first] = FB::VariantList(FB::variant_list_of(it->second));
+            }
+        } else {
+            outHeaders[it->first] = it->second;
+        }
+    }
+	FB::VariantMap response;
+	response["headers"] = outHeaders;
+	response["allowed"] = true;
+	response["success"] = success;
+	response["size"] = size;
+	std::string result = std::string((const char*) data.get(), size);
+	response["data"] = result;
+	
+	//callback->InvokeAsync("", FB::variant_list_of(true)(success)(outHeaders)(size)(result));
+	callback->InvokeAsync("", FB::variant_list_of(response));
 }
 
 void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
