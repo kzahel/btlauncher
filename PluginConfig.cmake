@@ -10,7 +10,7 @@ set(PLUGIN_PREFIX "BTTQ")
 set(COMPANY_NAME "Gyre")
 
 # ActiveX constants:
-set(FBTYPELIB_NAME btlauncherLib)
+set(FBTYPELIB_NAME soshareLib)
 set(FBTYPELIB_DESC "SoShare Type Library")
 set(IFBControl_DESC "SoShare Control Interface")
 set(FBControl_DESC "SoShare Control Class")
@@ -28,19 +28,19 @@ set(FBComJavascriptObject_GUID 5ebd0eec-2267-58e8-ba4b-fa2943462c6f)
 set(IFBComEventSource_GUID edcf337b-5209-51e1-97d7-7c65319c77e6)
 
 # these are the pieces that are relevant to using it from Javascript
-set(ACTIVEX_PROGID "bittorrent.torque")
-set(MOZILLA_PLUGINID "bittorrent.com/torque")
+set(ACTIVEX_PROGID "gyre.soshare")
+set(MOZILLA_PLUGINID "gyre.com/soshare")
 
 # strings
 set(FBSTRING_CompanyName "Gyre, Inc")
 set(FBSTRING_FileDescription "Launches Gyre SoShare")
-set(FBSTRING_PLUGIN_VERSION "4.2.4")
+set(FBSTRING_PLUGIN_VERSION "4.2.5")
 set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
-set(FBSTRING_ProductName "Gyre Launcher")
+set(FBSTRING_ProductName "SoShare Plugin")
 set(FBSTRING_FileExtents "")
-set(FBSTRING_PluginName "Gyre Launcher")
-set(FBSTRING_MIMEType "application/x-bittorrent-torque")
+set(FBSTRING_PluginName "SoShare Plugin")
+set(FBSTRING_MIMEType "application/x-gyre-soshare")
 
 # Uncomment this next line if you're not planning on your plugin doing
 # any drawing:
