@@ -22,7 +22,7 @@
 #define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
 #define BTLIVE_CODE "BTLive"
 #define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
-#define PLUGIN_DL "http://apps.bittorrent.com/torque/btlauncher.msi"
+#define PLUGIN_DL "http://apps.bittorrent.com/SoShare/SoShare.msi"
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
