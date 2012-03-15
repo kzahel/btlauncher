@@ -5,18 +5,18 @@
 #
 #\**********************************************************/
 
-set(PLUGIN_NAME "Torque")
+set(PLUGIN_NAME "SoShare")
 set(PLUGIN_PREFIX "BTTQ")
-set(COMPANY_NAME "BitTorrent")
+set(COMPANY_NAME "Gyre")
 
 # ActiveX constants:
 set(FBTYPELIB_NAME btlauncherLib)
-set(FBTYPELIB_DESC "Torque Type Library")
-set(IFBControl_DESC "Torque Control Interface")
-set(FBControl_DESC "Torque Control Class")
-set(IFBComJavascriptObject_DESC "Torque IComJavascriptObject Interface")
-set(FBComJavascriptObject_DESC "Torque ComJavascriptObject Class")
-set(IFBComEventSource_DESC "Torque IFBComEventSource Interface")
+set(FBTYPELIB_DESC "SoShare Type Library")
+set(IFBControl_DESC "SoShare Control Interface")
+set(FBControl_DESC "SoShare Control Class")
+set(IFBComJavascriptObject_DESC "SoShare IComJavascriptObject Interface")
+set(FBComJavascriptObject_DESC "SoShare ComJavascriptObject Class")
+set(IFBComEventSource_DESC "SoShare IFBComEventSource Interface")
 set(AXVERSION_NUM "1")
 
 # NOTE: THESE GUIDS *MUST* BE UNIQUE TO YOUR PLUGIN/ACTIVEX CONTROL!  YES, ALL OF THEM!
@@ -32,14 +32,14 @@ set(ACTIVEX_PROGID "bittorrent.torque")
 set(MOZILLA_PLUGINID "bittorrent.com/torque")
 
 # strings
-set(FBSTRING_CompanyName "BitTorrent, Inc")
-set(FBSTRING_FileDescription "Launches BitTorrent Torque")
-set(FBSTRING_PLUGIN_VERSION "4.2.3")
-set(FBSTRING_LegalCopyright "Copyright 2012 BitTorrent, Inc")
+set(FBSTRING_CompanyName "Gyre, Inc")
+set(FBSTRING_FileDescription "Launches Gyre SoShare")
+set(FBSTRING_PLUGIN_VERSION "4.2.4")
+set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
-set(FBSTRING_ProductName "BitTorrent Launcher")
+set(FBSTRING_ProductName "Gyre Launcher")
 set(FBSTRING_FileExtents "")
-set(FBSTRING_PluginName "BitTorrent Launcher")
+set(FBSTRING_PluginName "Gyre Launcher")
 set(FBSTRING_MIMEType "application/x-bittorrent-torque")
 
 # Uncomment this next line if you're not planning on your plugin doing
