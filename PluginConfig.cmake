@@ -34,7 +34,7 @@ set(MOZILLA_PLUGINID "gyre.com/soshare")
 # strings
 set(FBSTRING_CompanyName "Gyre, Inc")
 set(FBSTRING_FileDescription "Launches Gyre SoShare")
-set(FBSTRING_PLUGIN_VERSION "4.2.7")
+set(FBSTRING_PLUGIN_VERSION "4.2.9")
 set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "SoShare Plugin")
