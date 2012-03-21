@@ -27,6 +27,7 @@
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
+#define SOSHARE_DL "http://download.utorrent.com/latest/SoShare.exe"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -214,18 +215,20 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	}
 	std::wstring syspath(temppath);
 	syspath.append( program.c_str() );
+	syspath.append( _T("_") );
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
-	syspath.append( _T("_") );
-	std::wstring wversion;
-	syspath.append( wversion );
-	syspath.append( _T("_") );
 	syspath.append( boost::uuids::to_wstring(u) );
-	syspath.append(_T(".exe"));
-
+	bool result = CreateDirectory( syspath.c_str(), NULL );
+	if (! result) {
+		callback->InvokeAsync("", FB::variant_list_of(false)("error creating directory")(GetLastError()));
+		return;
+	}
+	syspath.append( _T("\\") );
+	syspath.append( program.c_str() );
+	syspath.append( _T(".exe") );
 	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
-		
 		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
 		return;
 	}
@@ -392,6 +395,8 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObj
 		url = std::string(BT_DL);
     } else if (wcsstr(program.c_str(), _T("Torque"))) {
 		url = std::string(TORQUE_DL);
+    } else if (wcsstr(program.c_str(), _T("SoShare"))) {
+		url = std::string(SOSHARE_DL);
 	} else if (wcsstr(program.c_str(), _T("BTLive"))) { 
 		url = std::string(LV_DL);
 	} else {
