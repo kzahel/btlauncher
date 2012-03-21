@@ -129,6 +129,77 @@ void btlauncherAPI::testEvent(const FB::variant& var)
     fire_fired(var, true, 1);
 }
 
+void *load_dll_proc(std::string filename, std::string procname) {
+	HMODULE mod = GetModuleHandleA(filename.c_str());
+	if (mod==NULL) {
+		mod = LoadLibraryA(filename.c_str());
+		if (mod == NULL)
+			return NULL;
+	}
+	return (void *) GetProcAddress(mod, procname.c_str());
+}
+
+BOOL RunAsAdministrator(wchar_t* name, wchar_t* cmdline, bool waitforsuccess,
+						int successcode, bool hide)
+{
+	typedef BOOL WINAPI ShellExecuteExProc(LPSHELLEXECUTEINFO lpExecInfo);
+
+	// Win95 doesn't have a stub for ShellExecuteExW so we need to dynload it
+	ShellExecuteExProc* lpShellExecuteEx;
+
+	lpShellExecuteEx =
+		(ShellExecuteExProc*) load_dll_proc("shell32.dll", "ShellExecuteExW");
+
+	assert(lpShellExecuteEx);
+
+	BOOL result = FALSE;
+
+	SHELLEXECUTEINFO sei;
+	memset(&sei, 0, sizeof(SHELLEXECUTEINFO));
+
+	sei.cbSize = sizeof(sei);
+	sei.lpVerb = _T("runas");
+	sei.lpFile = name;
+	sei.lpParameters = cmdline;
+	sei.nShow = hide ? SW_HIDE : SW_SHOWNORMAL;
+	sei.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI
+				| (waitforsuccess ? SEE_MASK_NOCLOSEPROCESS : 0);
+
+	if((*lpShellExecuteEx)(&sei) == TRUE)
+	{
+		if(!waitforsuccess)
+		{
+			result = TRUE;
+		}
+		else if(sei.hProcess != NULL)
+			{
+				// wait for the process to return exit code for success
+			if(WaitForSingleObject(sei.hProcess, 60000) == WAIT_OBJECT_0)
+			{
+				DWORD dwExitCode;
+				BOOL geresult = GetExitCodeProcess(sei.hProcess, &dwExitCode);
+				if(geresult && dwExitCode == successcode)
+				{
+					result = TRUE;
+				}
+			}
+
+			CloseHandle(sei.hProcess);
+		}
+	}
+
+	return result;
+}
+
+BOOL RunningVistaOrGreater() {
+	OSVERSIONINFO version;
+		
+	version.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
+	::GetVersionEx(&version);
+
+	return version.dwMajorVersion >= 6;
+}
+
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
 									   bool success,
@@ -167,6 +238,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		callback->InvokeAsync("", FB::variant_list_of("FILE")(false)(GetLastError()));
 		return;
 	}
+
 	std::wstring installcommand = std::wstring(syspath);
 	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
@@ -178,7 +250,12 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	const wchar_t* pchrTemp = installcommand.c_str(); 
     wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
 
-	BOOL bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	BOOL bProc = FALSE;
+	if(RunningVistaOrGreater()) {
+		bProc = RunAsAdministrator(pwszParam, NULL, true, 0, false);
+	} else {
+		bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	}
 	if(bProc) {
 		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError()));
 	} else {

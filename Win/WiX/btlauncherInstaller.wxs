@@ -11,9 +11,17 @@
                 OnlyDetect="no" IgnoreRemoveFailure="yes"
                 MigrateFeatures="yes" />
         </Upgrade>
-     
 
-        <!--Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
+      <!--Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/torque.exe" />
+
+      <CustomAction Id="BundledTorque"
+                BinaryKey="BundledTorque"
+                ExeCommand=""
+                Execute="deferred"
+                Impersonate="no"
+                Return="check" />
+
+        <Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
 
         <CustomAction Id="BTCustomAction"
                 BinaryKey="BTCustomDLL"
@@ -26,7 +34,8 @@
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
-            <!--Custom Action="BTCustomAction" After="InstallInitialize" /-->
+            <!--Custom Action="BTCustomAction" After="InstallInitialize" />
+            <Custom Action="BundledTorque" After="InstallExecute" /-->
         </InstallExecuteSequence>
 
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
