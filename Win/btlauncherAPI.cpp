@@ -33,6 +33,7 @@
 #define UTORRENT_NAME "uTorrent"
 #define BITTORRENT_NAME "BitTorrent"
 #define TORQUE_NAME "Torque"
+#define SOSHARE_NAME "SoShare"
 
 #define NOT_SUPPORTED_MESSAGE "This application is not supported."
 
@@ -468,9 +469,23 @@ std::wstring getExecutablePath(const std::wstring& program) {
 
 
 
-HINSTANCE launch_program(const std::wstring& program) {
-	HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
-	return result;
+BOOL launch_program(const std::wstring& program) {
+	//HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
+	// pops up a security dialog in IE
+	//return result;
+
+	std::wstring installcommand = getExecutablePath(program).c_str();
+	STARTUPINFO info;
+	PROCESS_INFORMATION procinfo;
+	memset(&info,0,sizeof(info));
+	info.cb = sizeof(STARTUPINFO);
+
+	wchar_t * pwszParam = new wchar_t[installcommand.size() + 1]; 
+	const wchar_t* pchrTemp = installcommand.c_str(); 
+    wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
+	BOOL bProc = FALSE;
+	bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	return bProc;
 }
 
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
@@ -478,7 +493,8 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	
-	HINSTANCE ret = (HINSTANCE)0;
+	//HINSTANCE ret = (HINSTANCE)0;
+	BOOL ret = FALSE;
 	if (isRunning(program).size() == 0) {
 		ret = launch_program(program);
 		callback->InvokeAsync("", FB::variant_list_of(false)(ret));
@@ -541,7 +557,7 @@ FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
 
 bool btlauncherAPI::isSupported(std::wstring program) {
 
-	if (program == _T(LIVE_NAME) || program == _T(UTORRENT_NAME) || program == _T(BITTORRENT_NAME) || program == _T(TORQUE_NAME)) {
+	if (program == _T(LIVE_NAME) || program == _T(UTORRENT_NAME) || program == _T(BITTORRENT_NAME) || program == _T(TORQUE_NAME) || program == _T(SOSHARE_NAME)) {
 		return true;
 	}
 	return false;
