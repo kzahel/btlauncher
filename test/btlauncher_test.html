@@ -52,6 +52,7 @@ getelt('checkupdate_div').setAttribute('style','display:block');
           populatestuff('uTorrent');
           populatestuff('BitTorrent');
           populatestuff('Torque');
+          populatestuff('SoShare');
           populatestuff('BTLive');
         }
 
@@ -190,6 +191,45 @@ download/install/run in boss mode
 <span id="Torque_installresult" style="background:#ccf"></span>
 
 </fieldset>
+
+
+<fieldset>
+<legend>SoShare</legend>
+
+
+
+<br />
+install path: 
+<span id="SoShare_installPath" style="background:#ccf">---
+</span>
+
+<br />
+version: 
+<span id="SoShare_version" style="background:#ccf">---
+</span>
+
+
+<br />
+is running: 
+<span id="SoShare_isRunning" style="background:#ccf">---
+</span>
+
+<br />
+run it
+<input onclick="run('SoShare')" type="button" value="run!" id="SoShare_run" disabled="disabled" />
+
+<br />
+stop it
+<input type="button" value="stop!" id="SoShare_stop" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('SoShare')" type="button" value="quiet run!" id="SoShare_install" disabled="disabled" />
+<input type="text" id="SoShare_verstring" value="7.2" />
+<span id="SoShare_installresult" style="background:#ccf"></span>
+
+</fieldset>
+
 
 
 
