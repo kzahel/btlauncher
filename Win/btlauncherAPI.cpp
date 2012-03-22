@@ -27,7 +27,7 @@
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
-#define SOSHARE_DL "http://download.utorrent.com/latest/SoShare.exe"
+#define SOSHARE_DL "http://download.utorrent.com/soshare/latest/SoShare.exe"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
