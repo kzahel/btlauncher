@@ -57,6 +57,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
+	registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
 	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
@@ -469,12 +470,15 @@ std::wstring getExecutablePath(const std::wstring& program) {
 
 
 
-BOOL launch_program(const std::wstring& program) {
+BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
 	//HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
 	// pops up a security dialog in IE
 	//return result;
 
 	std::wstring installcommand = getExecutablePath(program).c_str();
+	if (switches.length() > 0) {
+		installcommand.append( switches );
+	}
 	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
 	memset(&info,0,sizeof(info));
@@ -488,6 +492,17 @@ BOOL launch_program(const std::wstring& program) {
 	return bProc;
 }
 
+FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std::wstring& key) {
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
+	BOOL ret = FALSE;
+	std::wstring switches = std::wstring(_T(" /PAIR "));
+	switches.append(key);
+	ret = launch_program(program, switches);
+	return ret;
+}
+
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
@@ -496,7 +511,7 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 	//HINSTANCE ret = (HINSTANCE)0;
 	BOOL ret = FALSE;
 	if (isRunning(program).size() == 0) {
-		ret = launch_program(program);
+		ret = launch_program(program, _T(""));
 		callback->InvokeAsync("", FB::variant_list_of(false)(ret));
 	}
 	return ret;

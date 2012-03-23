@@ -5,6 +5,7 @@
 #
 #\**********************************************************/
 
+
 set(PLUGIN_NAME "SoShare")
 set(PLUGIN_PREFIX "BTTQ")
 set(COMPANY_NAME "Gyre")
@@ -34,7 +35,7 @@ set(MOZILLA_PLUGINID "gyre.com/soshare")
 # strings
 set(FBSTRING_CompanyName "Gyre, Inc")
 set(FBSTRING_FileDescription "Launches Gyre SoShare")
-set(FBSTRING_PLUGIN_VERSION "4.3.0")
+set(FBSTRING_PLUGIN_VERSION "4.3.1")
 set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "SoShare Plugin")
@@ -57,3 +58,4 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 
 # If you want to register per-machine on Windows, uncomment this line
 #set (FB_ATLREG_MACHINEWIDE 1)
+#add_firebreath_library(curl)
