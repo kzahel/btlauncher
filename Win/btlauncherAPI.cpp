@@ -7,6 +7,7 @@
 #include "JSObject.h"
 #include "variant_list.h"
 #include "DOM/Document.h"
+#include "DOM/Window.h"
 #include "global/config.h"
 #include "btlauncherAPI.h"
 #include "windows.h"
@@ -28,6 +29,9 @@
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 #define SOSHARE_DL "http://download.utorrent.com/soshare/latest/SoShare.exe"
+
+#define PAIRING_DOMAIN "getshareapp.com"
+//#define PAIRING_DOMAIN "192.168.56.1"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -496,6 +500,14 @@ FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std:
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
+	std::string location = m_host->getDOMWindow()->getLocation();
+	FB::URI uri = FB::URI::fromString(location);
+	if (true || uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
+		
+	} else {
+		return _T("access denied");
+	}
+	//std::string location = w->getLocation();
 	BOOL ret = FALSE;
 	std::wstring switches = std::wstring(_T(" /PAIR "));
 	switches.append(key);
