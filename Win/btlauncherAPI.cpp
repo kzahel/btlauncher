@@ -96,6 +96,7 @@ btlauncherAPI::~btlauncherAPI()
 ///         will throw a FB::script_error that will be translated into a
 ///         javascript exception in the page.
 ///////////////////////////////////////////////////////////////////////////////
+
 btlauncherPtr btlauncherAPI::getPlugin()
 {
     btlauncherPtr plugin(m_plugin.lock());
@@ -129,6 +130,14 @@ FB::variant btlauncherAPI::echo(const FB::variant& msg)
     static int n(0);
     fire_echo(msg, n++);
     return msg;
+}
+
+void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args) {
+	try {
+		callback->InvokeAsync("", args);
+	} catch (std::exception& e) {
+		// TODO -- only catch the std::runtime_error("Cannot invoke asynchronously"); (FireBreath JSObject.h)
+	}
 }
 
 void btlauncherAPI::testEvent(const FB::variant& var)
@@ -220,7 +229,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	TCHAR temppath[500];
 	DWORD gettempresult = GetTempPath(500, temppath);
 	if (! gettempresult) {
-		callback->InvokeAsync("", FB::variant_list_of(false)("GetTempPath")(GetLastError()));
+		do_callback(callback, FB::variant_list_of(false)("GetTempPath")(GetLastError()));
 		return;
 	}
 	std::wstring syspath(temppath);
@@ -231,7 +240,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	syspath.append( boost::uuids::to_wstring(u) );
 	bool result = CreateDirectory( syspath.c_str(), NULL );
 	if (! result) {
-		callback->InvokeAsync("", FB::variant_list_of(false)("error creating directory")(GetLastError()));
+		do_callback(callback, FB::variant_list_of(false)("error creating directory")(GetLastError()));
 		return;
 	}
 	syspath.append( _T("\\") );
@@ -239,7 +248,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	syspath.append( _T(".exe") );
 	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
-		callback->InvokeAsync("", FB::variant_list_of(false)(GetLastError()));
+		do_callback(callback, FB::variant_list_of(false)(GetLastError()));
 		return;
 	}
 	PVOID ptr = (VOID*) data.get();
@@ -248,7 +257,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	CloseHandle(hFile);
 	
 	if (! RESULT) {
-		callback->InvokeAsync("", FB::variant_list_of("FILE")(false)(GetLastError()));
+		do_callback(callback, FB::variant_list_of("FILE")(false)(GetLastError()));
 		return;
 	}
 
@@ -279,9 +288,9 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	}
 
 	if(bProc) {
-		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError())(pairingkey));
+		do_callback( callback, FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError())(pairingkey));
 	} else {
-		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(false)(installcommand.c_str())(GetLastError()));
+		do_callback( callback, FB::variant_list_of("PROCESS")(false)(installcommand.c_str())(GetLastError()));
 	}
 
 }
@@ -292,13 +301,13 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
 	if (! success) {
-		callback->InvokeAsync("", FB::variant_list_of(success));
+		do_callback(callback, FB::variant_list_of(success));
 		return;
 	}
 	TCHAR temppath[500];
 	DWORD gettempresult = GetTempPath(500, temppath);
 	if (! gettempresult) {
-		callback->InvokeAsync("", FB::variant_list_of(false)("GetTempPath")(GetLastError()));
+		do_callback(callback, FB::variant_list_of(false)("GetTempPath")(GetLastError()));
 		return;
 	}
 	std::wstring syspath(temppath);
@@ -311,7 +320,7 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 
 	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
-		callback->InvokeAsync("", FB::variant_list_of(false)("CreateFile")(GetLastError()));
+		do_callback(callback, FB::variant_list_of(false)("CreateFile")(GetLastError()));
 		return;
 	}
 	PVOID ptr = (VOID*) data.get();
@@ -320,7 +329,7 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 	CloseHandle(hFile);
 	
 	if (! RESULT) {
-		callback->InvokeAsync("", FB::variant_list_of("WriteFile")(false)(GetLastError()));
+		do_callback(callback, FB::variant_list_of("WriteFile")(false)(GetLastError()));
 		return;
 	}
 	std::wstring installcommand = std::wstring(_T("msiexec.exe /I "));
@@ -339,9 +348,9 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 
 	BOOL bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 	if(bProc) {
-		callback->InvokeAsync("", FB::variant_list_of("CreateProcess")(true)(installcommand.c_str())(GetLastError()));
+		do_callback(callback, FB::variant_list_of("CreateProcess")(true)(installcommand.c_str())(GetLastError()));
 	} else {
-		callback->InvokeAsync("", FB::variant_list_of("CreateProcess")(false)(installcommand.c_str())(GetLastError()));
+		do_callback(callback, FB::variant_list_of("CreateProcess")(false)(installcommand.c_str())(GetLastError()));
 	}
 }
 
@@ -368,7 +377,7 @@ void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback
 		FB::VariantMap response;
 		response["allowed"] = false;
 		response["success"] = false;
-		callback->InvokeAsync("", FB::variant_list_of(response));
+		do_callback(callback, FB::variant_list_of(response));
 		return;
 	}
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
@@ -401,8 +410,7 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
 	std::string result = std::string((const char*) data.get(), size);
 	response["data"] = result;
 	
-	//callback->InvokeAsync("", FB::variant_list_of(true)(success)(outHeaders)(size)(result));
-	callback->InvokeAsync("", FB::variant_list_of(response));
+	do_callback(callback, FB::variant_list_of(response));
 }
 
 void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
@@ -537,7 +545,7 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 	BOOL ret = FALSE;
 	if (isRunning(program).size() == 0) {
 		ret = launch_program(program, _T(""));
-		callback->InvokeAsync("", FB::variant_list_of(false)(ret));
+		do_callback(callback, FB::variant_list_of(false)(ret));
 	}
 	return ret;
 }
