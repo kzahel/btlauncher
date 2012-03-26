@@ -23,6 +23,8 @@
 #define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
 #define BTLIVE_CODE "BTLive"
 #define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
+#define MSIE_ELEVATION _T("Software\\Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy")
+#define MSIE_ELEVATION_GUID "ECC81F59-D6B1-46A4-B5E8-900FB424B95D"
 #define PLUGIN_DL "http://apps.bittorrent.com/SoShare/SoShare.msi"
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
@@ -466,6 +468,25 @@ std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key
 	}
 }
 
+BOOL setRegStringValue(const std::wstring& path, const std::wstring& key, const std::wstring& value, HKEY parentKey) {
+	CRegKey regKey;
+	const CString REG_SW_GROUP = path.c_str();
+	LONG RESULT;
+	RESULT = regKey.Open(parentKey, REG_SW_GROUP, KEY_READ);
+	if (RESULT == ERROR_SUCCESS) {
+		RESULT = regKey.SetKeyValue( key.c_str(), value.c_str() );
+		regKey.Close();
+		if (RESULT == ERROR_SUCCESS) {
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
@@ -477,16 +498,21 @@ std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {
 	}
 	return ret;
 }
-std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
-	if (!this->isSupported(program)) {
-		return _T(NOT_SUPPORTED_MESSAGE);
-	}
+
+std::wstring get_install_path(const std::wstring& program) {
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
 	std::wstring ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
 	if (ret.empty()) {
 		ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER );
 	}
 	return ret;
+}
+
+std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
+	return get_install_path(program);
 }
 
 std::wstring getExecutablePath(const std::wstring& program) {
@@ -501,11 +527,25 @@ std::wstring getExecutablePath(const std::wstring& program) {
 	return location;
 }
 
-
+BOOL write_elevation(const std::wstring& program) {
+	std::wstring reg_group = std::wstring(MSIE_ELEVATION);
+	reg_group.append(_T("{"));
+	reg_group.append( _T(MSIE_ELEVATION_GUID) ); // TODO -- per program
+	reg_group.append(_T("}"));
+	std::wstring val = get_install_path(program);
+	BOOL ret = setRegStringValue( reg_group, _T("AppPath"), val, HKEY_CURRENT_USER );
+	return ret;
+}
 
 BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
 	//HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
 	// pops up a security dialog in IE
+
+	// try to write to IE security dialog...
+	BOOL result = write_elevation(program);
+	return result;
+	
+	
 	//return result;
 
 	std::wstring installcommand = getExecutablePath(program).c_str();
