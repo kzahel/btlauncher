@@ -207,6 +207,10 @@ BOOL RunningVistaOrGreater() {
 	return version.dwMajorVersion >= 6;
 }
 
+std::wstring GetRandomKey() {
+	return _T("0123456789012345678901234567890123456789");
+}
+
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
 									   bool success,
@@ -249,6 +253,11 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	}
 
 	std::wstring installcommand = std::wstring(syspath);
+	std::wstring args;
+	args.append(_T(" /PAIR "));
+	std::wstring pairingkey = GetRandomKey();
+	args.append(pairingkey);
+
 	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
 	memset(&info,0,sizeof(info));
@@ -256,17 +265,21 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	 
 	/* CreateProcessW can modify installcommand thus we allocate needed memory */ 
 	wchar_t * pwszParam = new wchar_t[installcommand.size() + 1]; 
-	const wchar_t* pchrTemp = installcommand.c_str(); 
-    wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
+	wcscpy_s(pwszParam, installcommand.size() + 1, installcommand.c_str()); 
+
+	wchar_t * pwszArgs = new wchar_t[args.size() + 1];
+	wcscpy_s(pwszArgs, args.size() + 1, args.c_str());
 
 	BOOL bProc = FALSE;
 	if(RunningVistaOrGreater()) {
-		bProc = RunAsAdministrator(pwszParam, NULL, true, 0, false);
+		bProc = RunAsAdministrator(pwszParam, pwszArgs, true, 0, false);
 	} else {
-		bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+		//Test on XP! pwszArgs may need to be Param+Args, where it is currently just args
+		bProc = CreateProcess(pwszParam, pwszArgs, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 	}
+
 	if(bProc) {
-		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError()));
+		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError())(pairingkey));
 	} else {
 		callback->InvokeAsync("", FB::variant_list_of("PROCESS")(false)(installcommand.c_str())(GetLastError()));
 	}
