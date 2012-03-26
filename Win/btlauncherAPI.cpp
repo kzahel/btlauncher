@@ -217,7 +217,15 @@ BOOL RunningVistaOrGreater() {
 }
 
 std::wstring GetRandomKey() {
-	return _T("0123456789012345678901234567890123456789");
+	std::wstring possibilities = _T("0123456789ABCDEF");
+	wchar_t tmp[40];
+	int i;
+	for(i = 0; i < 40; i++) {
+		tmp[i] = possibilities.c_str()[rand() % possibilities.size()];
+	}
+	std::wstring ret(tmp, 40);
+	assert(ret.size() == 40);
+	return ret;
 }
 
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
