@@ -292,7 +292,8 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 
 	BOOL bProc = FALSE;
 	if(RunningVistaOrGreater()) {
-		bProc = RunAsAdministrator(pwszParam, pwszArgs, true, 0, false);
+		BOOL blocking = false;
+		bProc = RunAsAdministrator(pwszParam, pwszArgs, blocking, 0, false);
 	} else {
 		//Test on XP! pwszArgs may need to be Param+Args, where it is currently just args
 		bProc = CreateProcess(pwszParam, pwszArgs, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
