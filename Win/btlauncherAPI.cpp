@@ -555,7 +555,8 @@ BOOL write_elevation(const std::wstring& path, const std::wstring& name) {
 	reg_group.append(_T("\\{"));
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
-	reg_group.append( boost::uuids::to_wstring(u) );
+	//reg_group.append( boost::uuids::to_wstring(u) );
+	reg_group.append(_T(MSIE_ELEVATION_GUID));
 	reg_group.append(_T("}"));
 	BOOL ret = setRegStringValue( reg_group, _T("AppPath"), path, HKEY_CURRENT_USER );
 	ret = setRegStringValue( reg_group, _T("AppName"), name, HKEY_CURRENT_USER );
