@@ -64,7 +64,6 @@ public:
     FB_JSAPI_EVENT(notify, 0, ());
 
     // Method test-event
-    void testEvent(const FB::variant& s);
 	void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args);
 
 private:

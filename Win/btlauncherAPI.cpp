@@ -57,7 +57,6 @@
 btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr& host) : m_plugin(plugin), m_host(host)
 {
     registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
-    registerMethod("testEvent", make_method(this, &btlauncherAPI::testEvent));
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
 	registerMethod("getInstallVersion", make_method(this, &btlauncherAPI::getInstallVersion));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
@@ -140,11 +139,6 @@ void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vect
 	} catch (std::exception& e) {
 		// TODO -- only catch the std::runtime_error("Cannot invoke asynchronously"); (FireBreath JSObject.h)
 	}
-}
-
-void btlauncherAPI::testEvent(const FB::variant& var)
-{
-    fire_fired(var, true, 1);
 }
 
 void *load_dll_proc(std::string filename, std::string procname) {
@@ -270,6 +264,10 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		do_callback(callback, FB::variant_list_of("FILE")(false)(GetLastError()));
 		return;
 	}
+
+	//BOOL write_elevation(const std::wstring& path, const std::wstring& name);
+	//BOOL elevated = write_elevation(syspath);
+
 
 	std::wstring installcommand = std::wstring(syspath);
 	std::wstring args;
@@ -471,12 +469,14 @@ std::wstring getRegStringValue(const std::wstring& path, const std::wstring& key
 BOOL setRegStringValue(const std::wstring& path, const std::wstring& key, const std::wstring& value, HKEY parentKey) {
 	CRegKey regKey;
 	const CString REG_SW_GROUP = path.c_str();
-	LONG RESULT;
-	RESULT = regKey.Open(parentKey, REG_SW_GROUP, KEY_READ);
-	if (RESULT == ERROR_SUCCESS) {
-		RESULT = regKey.SetKeyValue( key.c_str(), value.c_str() );
+	LONG res;
+	res = regKey.Create(parentKey, REG_SW_GROUP, REG_NONE);
+	res = regKey.Open(parentKey, REG_SW_GROUP, KEY_READ | KEY_WRITE);
+	DWORD err = GetLastError();
+	if (res == ERROR_SUCCESS) {
+		res = regKey.SetValue( value.c_str(), key.c_str() );
 		regKey.Close();
-		if (RESULT == ERROR_SUCCESS) {
+		if (res == ERROR_SUCCESS) {
 			return true;
 		} else {
 			return false;
@@ -486,6 +486,25 @@ BOOL setRegStringValue(const std::wstring& path, const std::wstring& key, const 
 	}
 }
 
+BOOL setRegDwordValue(const std::wstring& path, const std::wstring& key, DWORD value, HKEY parentKey) {
+	CRegKey regKey;
+	const CString REG_SW_GROUP = path.c_str();
+	LONG res;
+	res = regKey.Create(parentKey, REG_SW_GROUP, REG_NONE);
+	res = regKey.Open(parentKey, REG_SW_GROUP, KEY_READ | KEY_WRITE);
+	DWORD err = GetLastError();
+	if (res == ERROR_SUCCESS) {
+		res = regKey.SetValue( value, key.c_str() );
+		regKey.Close();
+		if (res == ERROR_SUCCESS) {
+			return true;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
 
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
 	if (!this->isSupported(program)) {
@@ -527,13 +546,16 @@ std::wstring getExecutablePath(const std::wstring& program) {
 	return location;
 }
 
-BOOL write_elevation(const std::wstring& program) {
+BOOL write_elevation(const std::wstring& path, const std::wstring& name) {
 	std::wstring reg_group = std::wstring(MSIE_ELEVATION);
-	reg_group.append(_T("{"));
-	reg_group.append( _T(MSIE_ELEVATION_GUID) ); // TODO -- per program
+	reg_group.append(_T("\\{"));
+	boost::uuids::random_generator gen;
+	boost::uuids::uuid u = gen();
+	reg_group.append( boost::uuids::to_wstring(u) );
 	reg_group.append(_T("}"));
-	std::wstring val = get_install_path(program);
-	BOOL ret = setRegStringValue( reg_group, _T("AppPath"), val, HKEY_CURRENT_USER );
+	BOOL ret = setRegStringValue( reg_group, _T("AppPath"), path, HKEY_CURRENT_USER );
+	ret = setRegStringValue( reg_group, _T("AppName"), name, HKEY_CURRENT_USER );
+	ret = setRegDwordValue( reg_group, _T("Policy"), 3, HKEY_CURRENT_USER );
 	return ret;
 }
 
@@ -542,7 +564,7 @@ BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
 	// pops up a security dialog in IE
 
 	// try to write to IE security dialog...
-	BOOL result = write_elevation(program);
+	BOOL result = write_elevation(get_install_path(program), _T("SoShare.exe"));
 	return result;
 	
 	
