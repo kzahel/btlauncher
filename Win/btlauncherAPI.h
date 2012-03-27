@@ -21,6 +21,8 @@
 #include "SystemHelpers.h"
 #include "SimpleStreamHelper.h"
 
+#include "variant_list.h"
+
 #ifndef H_btlauncherAPI
 #define H_btlauncherAPI
 
@@ -52,6 +54,7 @@ public:
 	std::wstring getInstallPath(const std::wstring& val);
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
+	FB::variant enablePairing(const std::wstring& val, const std::wstring& key);
 	FB::VariantList isRunning(const std::wstring& val);
 	FB::VariantList stopRunning(const std::wstring& val);
 
@@ -61,7 +64,7 @@ public:
     FB_JSAPI_EVENT(notify, 0, ());
 
     // Method test-event
-    void testEvent(const FB::variant& s);
+	void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args);
 
 private:
 	bool isSupported(std::wstring program);
