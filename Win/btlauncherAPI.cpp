@@ -43,6 +43,8 @@
 
 #define NOT_SUPPORTED_MESSAGE "This application is not supported."
 
+BOOL write_elevation(const std::wstring& path, const std::wstring& name);
+
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr host)
 ///
@@ -236,20 +238,22 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		do_callback(callback, FB::variant_list_of(false)("GetTempPath")(GetLastError()));
 		return;
 	}
-	std::wstring syspath(temppath);
-	syspath.append( program.c_str() );
-	syspath.append( _T("_") );
+	std::wstring folder(temppath);
+	folder.append( program.c_str() );
+	folder.append( _T("_") );
 	boost::uuids::random_generator gen;
 	boost::uuids::uuid u = gen();
-	syspath.append( boost::uuids::to_wstring(u) );
-	bool result = CreateDirectory( syspath.c_str(), NULL );
+	folder.append( boost::uuids::to_wstring(u) );
+	BOOL result = CreateDirectory( folder.c_str(), NULL );
 	if (! result) {
 		do_callback(callback, FB::variant_list_of(false)("error creating directory")(GetLastError()));
 		return;
 	}
+	std::wstring syspath(folder);
+	std::wstring name(program);
+	name.append(_T(".exe"));
 	syspath.append( _T("\\") );
-	syspath.append( program.c_str() );
-	syspath.append( _T(".exe") );
+	syspath.append( name.c_str() );
 	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
 		do_callback(callback, FB::variant_list_of(false)(GetLastError()));
@@ -265,8 +269,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		return;
 	}
 
-	//BOOL write_elevation(const std::wstring& path, const std::wstring& name);
-	//BOOL elevated = write_elevation(syspath);
+	BOOL elevated = write_elevation(folder, name);
 
 
 	std::wstring installcommand = std::wstring(syspath);
@@ -565,10 +568,6 @@ BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
 
 	// try to write to IE security dialog...
 	BOOL result = write_elevation(get_install_path(program), _T("SoShare.exe"));
-	return result;
-	
-	
-	//return result;
 
 	std::wstring installcommand = getExecutablePath(program).c_str();
 	if (switches.length() > 0) {
