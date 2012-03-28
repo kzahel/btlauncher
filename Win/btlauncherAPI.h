@@ -41,13 +41,14 @@ public:
 
     // Method echo
     FB::variant echo(const FB::variant& msg);
+	void ajax(const std::string& url, const FB::JSObjectPtr& callback);
 	void checkForUpdate(const FB::JSObjectPtr& callback);
 	void gotCheckForUpdate(const FB::JSObjectPtr& callback, 
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size);
-	void downloadProgram(const std::wstring& val, const std::string& version, const FB::JSObjectPtr& callback);
+	void downloadProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
 	std::wstring getInstallPath(const std::wstring& val);
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
@@ -64,10 +65,13 @@ public:
 
 private:
 	bool isSupported(std::wstring program);
-
+    void gotajax(const FB::JSObjectPtr& callback, 
+									bool success,
+									const FB::HeaderMap& headers,
+									const boost::shared_array<uint8_t>& data,
+									const size_t size);
 	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									std::wstring& program,
-									std::string& version,
 									bool success,
 									const FB::HeaderMap& headers,
 									const boost::shared_array<uint8_t>& data,

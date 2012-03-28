@@ -22,10 +22,11 @@
 #define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
 #define BTLIVE_CODE "BTLive"
 #define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
-#define UT_DL "http://download.utorrent.com/3.1/utorrent.exe"
-#define BT_DL "http://download.bittorrent.com/dl/BitTorrent-7.6.exe"
+#define PLUGIN_DL "http://apps.bittorrent.com/torque/btlauncher.msi"
+#define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
+#define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
-#define TORQUE_DL "http://pwmckenna.com/files/torque.exe"
+#define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -55,6 +56,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
     // Read-write property
     registerProperty("testString",
@@ -129,7 +131,6 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::wstring& program,
-									   std::string& version,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
@@ -146,7 +147,6 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	boost::uuids::uuid u = gen();
 	syspath.append( _T("_") );
 	std::wstring wversion;
-	wversion.assign( version.begin(), version.end() );
 	syspath.append( wversion );
 	syspath.append( _T("_") );
 	syspath.append( boost::uuids::to_wstring(u) );
@@ -168,7 +168,6 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		return;
 	}
 	std::wstring installcommand = std::wstring(syspath);
-	installcommand.append(_T(" /NOINSTALL /MINIMIZED /HIDE"));
 	STARTUPINFO info;
 	PROCESS_INFORMATION procinfo;
 	memset(&info,0,sizeof(info));
@@ -248,7 +247,8 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 }
 
 void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
-	std::string url = std::string("http://10.10.90.24:9090/static/btlauncher.msi?v=");
+	std::string url = std::string(PLUGIN_DL);
+	url.append( std::string("?v=") );
 	url.append( std::string(FBSTRING_PLUGIN_VERSION) );
 
 	
@@ -262,20 +262,55 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4)
 		);
-
 }
 
-void btlauncherAPI::downloadProgram(const std::wstring& program, const std::string& version, const FB::JSObjectPtr& callback) {
+void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
+	if (FB::URI::fromString(url).domain != "127.0.0.1") {
+		FB::VariantMap response;
+		response["allowed"] = false;
+		response["success"] = false;
+		callback->InvokeAsync("", FB::variant_list_of(response));
+		return;
+	}
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
+		);
+}
+
+void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback, 
+							bool success,
+						    const FB::HeaderMap& headers,
+						    const boost::shared_array<uint8_t>& data,
+						    const size_t size) {
+	FB::VariantMap outHeaders;
+	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+        if (headers.count(it->first) > 1) {
+            if (outHeaders.find(it->first) != outHeaders.end()) {
+                outHeaders[it->first].cast<FB::VariantList>().push_back(it->second);
+            } else {
+                outHeaders[it->first] = FB::VariantList(FB::variant_list_of(it->second));
+            }
+        } else {
+            outHeaders[it->first] = it->second;
+        }
+    }
+	FB::VariantMap response;
+	response["headers"] = outHeaders;
+	response["allowed"] = true;
+	response["success"] = success;
+	response["size"] = size;
+	std::string result = std::string((const char*) data.get(), size);
+	response["data"] = result;
+	
+	//callback->InvokeAsync("", FB::variant_list_of(true)(success)(outHeaders)(size)(result));
+	callback->InvokeAsync("", FB::variant_list_of(response));
+}
+
+void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
 	std::string url;
 
 	if (wcsstr(program.c_str(), _T("uTorrent"))) {
-		if (version.length() > 0) {
-			url = std::string("http://download.utorrent.com/");
-			url.append( version.c_str() );
-			url.append( "/utorrent.exe" );
-		} else {
-			url = std::string(UT_DL);
-		}
+		url = std::string(UT_DL);
 	} else if (wcsstr(program.c_str(), _T("BitTorrent"))) {
 		url = std::string(BT_DL);
     } else if (wcsstr(program.c_str(), _T("Torque"))) {
@@ -289,8 +324,8 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const std::stri
 	//url = version.c_str();
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
-		);
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
+	);
 }
 
 
@@ -319,31 +354,30 @@ std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
+	std::wstring ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_LOCAL_MACHINE );
+	if (ret.empty()) {
+		ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_CURRENT_USER );
 	}
-	return getRegStringValue( reg_group, _T("DisplayVersion"), parentKey );
+	return ret;
 }
 std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
+	std::wstring ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
+	if (ret.empty()) {
+		ret = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER );
 	}
-	return getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
+	return ret;
 }
 
 std::wstring getExecutablePath(const std::wstring& program) {
-	HKEY parentKey = HKEY_LOCAL_MACHINE;
-	if (program == _T("BTLive")) {
-		parentKey = HKEY_CURRENT_USER;
-	}
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
-	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), parentKey );
+	std::wstring location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_LOCAL_MACHINE );
+	if(location.empty()) {
+		location = getRegStringValue( reg_group, _T("InstallLocation"), HKEY_CURRENT_USER ); 
+	}
 	location.append( _T("\\") );
 	location.append( program );
 	location.append( _T(".exe") );

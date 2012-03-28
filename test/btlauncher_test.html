@@ -12,9 +12,24 @@ if (! window.console) {
 }
 var WINDOW_HASH = '4823';
 
+
+
   function getelt(id) {
     return document.getElementById(id);
   }
+
+function doajax(input) {
+  var url = getelt('ajax_url').value;
+
+  plugin().ajax( url, 
+function(response) { 
+  console.log('got response',response);
+
+}
+);
+}
+
+
         function plugin0()
         {
             return document.getElementById('plugin0');
@@ -90,21 +105,40 @@ function stop(program) {
 }
 
 function install(program) {
+if (program == 'Torque') {
+  var verstring = getelt(program+'_verstring').value;
+} else {
   var verstring = '';
-  //var verstring = getelt(program+'_verstring').value;
+}
+
+
   plugin().downloadProgram(program, verstring, function(a,b,c,d) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c + ' ' + d); } );
+
 
 
 }
 
+
+
+
+
     </script>
 <body>
 <div> the plugin --&gt;
-    <object id="plugin0" type="application/x-btlauncher" width="5" height="5">
+    <object id="plugin0" type="application/x-bittorrent-torque" width="5" height="5">
       <param name="onload" value="pluginLoaded" />
     </object>
 </div>
 <br />
+
+
+<fieldset>
+<legend>AJAX STUFF</legend>
+
+<div id="ajax">
+<input type="text" id="ajax_url" value="http://127.0.0.1:10000/gui/pingimg" /><input type="button" value="get" onclick="doajax(this)" />
+</div>
+</fieldset>
 
 <div id="checkupdate_div" style="display:none">
 <a id="checkupdate" href="#">check for update</a>
@@ -153,7 +187,7 @@ stop it
 
 <br />
 download/install/run in boss mode
-<input onclick="install('Torque')" type="button" value="secret install!" id="Torque_install" disabled="disabled" />
+<input onclick="install('Torque')" type="button" value="quiet run!" id="Torque_install" disabled="disabled" />
 <input type="text" id="Torque_verstring" value="7.2" />
 <span id="Torque_installresult" style="background:#ccf"></span>
 
@@ -191,7 +225,7 @@ stop it
 
 <br />
 download/install/run in boss mode
-<input onclick="install('uTorrent')" type="button" value="secret install!" id="uTorrent_install" disabled="disabled" />
+<input onclick="install('uTorrent')" type="button" value="quiet run!" id="uTorrent_install" disabled="disabled" />
 <input type="text" id="uTorrent_verstring" value="3.1" />
 <span id="uTorrent_installresult" style="background:#ccf"></span>
 
@@ -228,7 +262,7 @@ stop it
 
 <br />
 download/install/run in boss mode
-<input onclick="install('BitTorrent')" type="button" value="secret install!" id="BitTorrent_install" disabled="disabled" />
+<input onclick="install('BitTorrent')" type="button" value="quiet run!" id="BitTorrent_install" disabled="disabled" />
 <input type="text" id="BitTorrent_verstring" value="7.2" />
 <span id="BitTorrent_installresult" style="background:#ccf"></span>
 
@@ -265,7 +299,7 @@ stop it
 
 <br />
 download/install/run in boss mode
-<input onclick="install('BTLive')" type="button" value="secret install!" id="BTLive_install" disabled="disabled" />
+<input onclick="install('BTLive')" type="button" value="quiet run!" id="BTLive_install" disabled="disabled" />
 <span id="BTLive_installresult" style="background:#ccf"></span>
 <input type="text" id="BTLive_verstring" value="3.1" />
 

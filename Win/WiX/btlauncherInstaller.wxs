@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Product Id="*" Name="${FBSTRING_PluginName}" Language="1033" Version="${FBSTRING_PLUGIN_VERSION}" Manufacturer="${FBSTRING_CompanyName}" UpgradeCode="{2c6aa13f-52cb-531f-a00d-26ddd7b72bc9}">
         <Package InstallerVersion="200" Compressed="yes" Description="Installer for the ${PLUGIN_NAME} plugin" InstallScope="perUser" />
         <Upgrade Id="{2c6aa13f-52cb-531f-a00d-26ddd7b72bc9}">
@@ -10,11 +11,24 @@
                 OnlyDetect="no" IgnoreRemoveFailure="yes"
                 MigrateFeatures="yes" />
         </Upgrade>
-		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+     
+
+        <Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
+
+        <CustomAction Id="BTCustomAction"
+                BinaryKey="BTCustomDLL"
+                DllEntry="BTCustomAction"
+                Execute="immediate"
+                Return="check"
+                HideTarget="no" />
+      
+        <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
+            <Custom Action="BTCustomAction" After="InstallInitialize" />
         </InstallExecuteSequence>
+
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
 
         <Directory Id="TARGETDIR" Name="SourceDir">
