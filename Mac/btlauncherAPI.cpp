@@ -41,8 +41,13 @@ using namespace std;
 
 #define BTLIVE_INFO_PATH "/BTLive.app/Contents/Info.plist"
 #define BTLIVE_EXE_PATH "/BTLive.app/Contents/MacOS/BTLive"
-#define LATEST_LIVE_VERSION 43107
-#define UNKNOWN_VERSION "unknown"
+#define BTLIVE_DOWNLOAD_URL "http://live-installer.s3.amazonaws.com/live.tar"
+
+#define SOSHARE_INFO_PATH "/SoShare.app/Contents/Info.plist"
+#define SOSHARE_EXE_PATH "/SoShare.app/Contents/MacOS/SoShare"
+#define SOSHARE_DOWNLOAD_URL "http://localhost:8080/SoShare.tar.gz"
+
+#define UNKNOWN_VERSION ""
 
 int btlauncherAPI::GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
 // Returns a list of all BSD processes on the system.  This routine
@@ -166,25 +171,18 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
-    // Read-only property
-    registerProperty("version",
-                     make_property(this,
-                        &btlauncherAPI::get_version));
-	
-	this->m_live_pid = NULL;
+	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
+    registerProperty("version", make_property(this, &btlauncherAPI::get_version));
 	
 	FSRef ref;
     OSType folderType = kApplicationSupportFolderType;
     char path[PATH_MAX];
 	
     FSFindFolder( kUserDomain, folderType, kCreateFolder, &ref );
-	
     FSRefMakePath( &ref, (UInt8*)&path, PATH_MAX );
 	
 	this->installPath = string(path);
     
-    this->getInstalledVersion();
-	
 	/* Establish handler to clean up child processes otherwise Live will live on as a zombie! */
 	struct sigaction sa;
 	sigemptyset(&sa.sa_mask);
@@ -245,13 +243,11 @@ void btlauncherAPI::testEvent(const FB::variant& var)
 #define bufsz 2048
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
 									   std::string& program,
-									   std::string& version,
 									   bool success,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
-	//printf("\nIn GotDownloadProgram\n");
-	char *tmpname = strdup("/tmp/btliveXXXXXX");
+	char *tmpname = strdup("/tmp/btlauncherXXXXXX");
 	mkstemp(tmpname);
 	ofstream f(tmpname);
 	
@@ -259,87 +255,69 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 		callback->InvokeAsync("", FB::variant_list_of(false)(-1));
 		return;
 	}
-	
 	f.write((char *)data.get(), size);
-	
 	f.close();
 	
+	std::string url;
+	if (program == "SoShare")
+		url = SOSHARE_DOWNLOAD_URL;
+	else
+		url = BTLIVE_DOWNLOAD_URL;
+	
+	const char *tarFlags = "-xf";
+	if (url.find(".gz") != std::string::npos)
+		tarFlags = "-xzf";
+	
+	// not waiting for tar result. why not using system() instead?
 	pid_t tarPid;
 	switch(tarPid = fork()) 
 	{
 		case -1:
-			perror("BTLauncher Tar Fork");
 			exit(1);
 			break;
 		case 0:
-			execl("/usr/bin/tar", "tar", "-xf", tmpname, "-C", this->installPath.c_str(), NULL);
+			execl("/usr/bin/tar", "tar", tarFlags, tmpname, "-C", this->installPath.c_str(), NULL);
 			break;
 		default:
 			break;
 	}
+	
+	callback->InvokeAsync("", FB::variant_list_of(true)(1));
 }
 
-
-void btlauncherAPI::downloadProgram(const std::string& program, const std::string& version, const FB::JSObjectPtr& callback) {
-
+void btlauncherAPI::downloadProgram(const std::string& program, const FB::JSObjectPtr& callback) {
 	std::string url;
-/*
-	if (program == "uTorrent") {
-		if (version.length() > 0) {
-			url = std::string("http://download.utorrent.com/");
-			url.append( version.c_str() );
-			url.append( "/utorrent.exe" );
-		} else {
-			url = std::string(UT_DL);
-		}
-	} else {
-		url = std::string(BT_DL);
-	}
-	*/
-	url = std::string("http://live-installer.s3.amazonaws.com/live.tar");
-		
+	if (program == "SoShare")
+		url = SOSHARE_DOWNLOAD_URL;
+	else
+		url = BTLIVE_DOWNLOAD_URL;
+
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, version, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
 		);
-	
 }
 
 std::string btlauncherAPI::getInstallVersion(const std::string& program) {	
-	/*
-	std::string reg_group = std::string(INSTALL_REG_PATH).append( program );
-	return getRegStringValue( reg_group, _T("DisplayVersion") );
-	*/
-	return this->liveVersion;
-}
-std::string btlauncherAPI::getInstallPath(const std::string& program) {	
-	/*
-	std::string reg_group = std::string(INSTALL_REG_PATH).append( program );
-	return getRegStringValue( reg_group, _T("InstallLocation") );
-	*/
-	return this->installPath;
-}
-
-void btlauncherAPI::getInstalledVersion() {
-    xmlDocPtr doc;
+	xmlDocPtr doc;
 	xmlNodePtr cur;
 	
-	string liveInfo = this->installPath + string(BTLIVE_INFO_PATH);
+	const char *infoPath;
+	if (program == "SoShare")
+		infoPath = SOSHARE_INFO_PATH;
+	else
+		infoPath = BTLIVE_INFO_PATH;
 	
-	doc = xmlParseFile(liveInfo.c_str());
+	string appInfo = this->installPath + string(infoPath);
+	doc = xmlParseFile(appInfo.c_str());
 	
 	if(!doc) {
-        this->liveVersion = string(UNKNOWN_VERSION);
-		return;
+		return std::string(UNKNOWN_VERSION);
 	}
-	
-	//printf("Live exists on OSX");
 	
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		fprintf(stderr,"Live Info.Plist is an empty document\n");
-        this->liveVersion = string(UNKNOWN_VERSION);
 		xmlFreeDoc(doc);
-		return;
+		return std::string(UNKNOWN_VERSION);
 	}
 	
 	xmlXPathContextPtr context = xmlXPathNewContext(doc);
@@ -347,70 +325,55 @@ void btlauncherAPI::getInstalledVersion() {
 	xmlXPathObjectPtr result = xmlXPathEvalExpression(xpath, context);
 	
 	if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
-        this->liveVersion = string(UNKNOWN_VERSION);
-		return;
+		xmlFreeDoc(doc);
+        return std::string(UNKNOWN_VERSION);
 	}
 	
 	xmlNodeSetPtr nodeSetPtr = result->nodesetval;
 	xmlNodePtr curNode;
 	curNode = nodeSetPtr->nodeTab[0];
-	//printf("\nXPATH Node child content: %s", (char *)curNode->children[0].content);
-	
-	this->liveVersion = string((char *)curNode->children[0].content);
-    //string liveVersion((char *)curNode->children[0].content);
-	/*
-    boost::algorithm::erase_all(liveVersion,".");
-	
-	int liveVersionInt = 0;
-	
-	try {
-		liveVersionInt = boost::lexical_cast<int>( liveVersion.c_str() );
-	} catch( boost::bad_lexical_cast const& ) {
-		//printf("Live could not convert version number to int");
-	}
-    */
+	std::string version((char *)curNode->children[0].content);
+	xmlFreeDoc(doc);
+
+	return version;
 }
 
-
-int btlauncherAPI::isInstalledAndUpToDate() {	
-	//printf("\nLive Version read is %d\n", liveVersionInt);
-	//if (this->liveVersionInt < LATEST_LIVE_VERSION) {
-		//printf("Live is out of date.");
-	//	return 0;
-	//}
-	
-	return 1;
+std::string btlauncherAPI::getInstallPath(const std::string& program) {	
+	return this->installPath;
 }
-
 
 FB::variant btlauncherAPI::runProgram(const std::string& program, const FB::JSObjectPtr& callback) {
-    //Live is now responsible for updating itself
-	//if (this->isInstalledAndUpToDate()) {
-		if(!this->isLiveRunning()) {
-			
-			switch(this->m_live_pid = fork()) 
-			{
-				case -1: {
-					perror("BTLauncher Run Program Fork");
-					exit(1);
-					break;
-				}
-				case 0: {
-					string liveExe = this->installPath + string(BTLIVE_EXE_PATH);
-					//printf("Opening %s\n", liveExe.c_str());
-					execlp(liveExe.c_str(), liveExe.c_str(), NULL);
-					break;
-				}
-				default: {
-					//printf("Running Live in child process. %d\n", this->m_live_pid);
-					break;
-				}
+	string exe = this->installPath;
+	if (program == "SoShare")
+		exe += SOSHARE_EXE_PATH;
+	else
+		exe += BTLIVE_EXE_PATH;
+		
+	struct stat st;
+	if (stat(exe.c_str(), &st) == -1 || !S_ISREG(st.st_mode)) {
+		callback->InvokeAsync("", FB::variant_list_of(false)(0));
+		return 0;
+	}
+	
+	FB::VariantList list = isRunning(program);
+	if (list.empty()) {
+		switch(fork()) 
+		{
+			case -1: {
+				perror("BTLauncher Run Program Fork");
+				exit(1);
+				break;
+			}
+			case 0: {
+				execlp(exe.c_str(), exe.c_str(), NULL);
+				exit(1);
+			}
+			default: {
+				break;
 			}
 		}
-	//}
-	//else {
-	//	this->downloadProgram(program, string(""), callback);
-	//}
+	}
+	callback->InvokeAsync("", FB::variant_list_of(true)(1));
 	return 0;
 }
 
@@ -423,7 +386,7 @@ FB::VariantList btlauncherAPI::stopRunning(const std::string& val) {
     GetBSDProcessList(&procList, &procCount);
     int i;
     for (i = 0; i < procCount; i++) {
-        if (!strcmp(procList[i].kp_proc.p_comm, "BTLive")) {
+        if (!strcmp(procList[i].kp_proc.p_comm, val.c_str())) {
             kill(procList[i].kp_proc.p_pid, SIGKILL);
             foundIt = true;
         }
@@ -437,23 +400,9 @@ FB::VariantList btlauncherAPI::stopRunning(const std::string& val) {
     return list;
 }
 
-int btlauncherAPI::isLiveRunning() {
-	size_t procCount = 0;
-	kinfo_proc *procList = NULL;
-	GetBSDProcessList(&procList, &procCount);
-	int i;
-	for (i = 0; i < procCount; i++) {
-		if (!strcmp(procList[i].kp_proc.p_comm, "BTLive")) {
-			return 1;
-		}
-	}
-	return 0;
-}
 
-FB::variant btlauncherAPI::isRunning(const std::string& val) {
+FB::VariantList btlauncherAPI::isRunning(const std::string& val) {
 	FB::VariantList list;
-    //This could be used when uTorrent or Torque is added
-    /*
     size_t procCount = 0;
 	kinfo_proc *procList = NULL;
 	GetBSDProcessList(&procList, &procCount);
@@ -462,10 +411,48 @@ FB::variant btlauncherAPI::isRunning(const std::string& val) {
 		if (!strcmp(procList[i].kp_proc.p_comm, val.c_str())) {
 			list.push_back(procList[i].kp_proc.p_comm);
 		}
-	}*/
-    if (this->isLiveRunning()) {
-        list.push_back("BTLive");
-    }
-    
+	}
 	return list;
+}
+
+
+void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
+	if (FB::URI::fromString(url).domain != "127.0.0.1") {
+		FB::VariantMap response;
+		response["allowed"] = false;
+		response["success"] = false;
+		callback->InvokeAsync("", FB::variant_list_of(response));
+		return;
+	}
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
+		);
+}
+
+void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback, 
+							bool success,
+						    const FB::HeaderMap& headers,
+						    const boost::shared_array<uint8_t>& data,
+						    const size_t size) {
+	FB::VariantMap outHeaders;
+	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+        if (headers.count(it->first) > 1) {
+            if (outHeaders.find(it->first) != outHeaders.end()) {
+                outHeaders[it->first].cast<FB::VariantList>().push_back(it->second);
+            } else {
+                outHeaders[it->first] = FB::VariantList(FB::variant_list_of(it->second));
+            }
+        } else {
+            outHeaders[it->first] = it->second;
+        }
+    }
+	FB::VariantMap response;
+	response["headers"] = outHeaders;
+	response["allowed"] = true;
+	response["success"] = success;
+	response["size"] = size;
+	std::string result = std::string((const char*) data.get(), size);
+	response["data"] = result;
+	
+	callback->InvokeAsync("", FB::variant_list_of(response));
 }
