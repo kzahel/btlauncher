@@ -268,8 +268,8 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	if (url.find(".gz") != std::string::npos)
 		tarFlags = "-xzf";
 	
-	// not waiting for tar result. why not using system() instead?
 	pid_t tarPid;
+	int status;
 	switch(tarPid = fork()) 
 	{
 		case -1:
@@ -279,10 +279,11 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 			execl("/usr/bin/tar", "tar", tarFlags, tmpname, "-C", this->installPath.c_str(), NULL);
 			break;
 		default:
+			waitpid(tarPid, &status, 0);
 			break;
 	}
 	
-	callback->InvokeAsync("", FB::variant_list_of(true)(1));
+	runProgram(program, callback);
 }
 
 void btlauncherAPI::downloadProgram(const std::string& program, const FB::JSObjectPtr& callback) {
