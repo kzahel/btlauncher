@@ -45,7 +45,7 @@ using namespace std;
 
 #define SOSHARE_INFO_PATH "/SoShare.app/Contents/Info.plist"
 #define SOSHARE_EXE_PATH "/SoShare.app/Contents/MacOS/SoShare"
-#define SOSHARE_DOWNLOAD_URL "http://localhost:8080/SoShare.tar.gz"
+#define SOSHARE_DOWNLOAD_URL "http://download.utorrent.com/mac/SoShare.tar.gz"
 
 #define UNKNOWN_VERSION ""
 
