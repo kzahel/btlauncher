@@ -8,7 +8,7 @@
 set(PREPROCESSOR_DEFINE "LIVE")
 set(PLUGIN_NAME "Live")
 set(PLUGIN_PREFIX "BTTQ")
-set(COMPANY_NAME "BitTorrent")
+set(COMPANY_NAME "BitTorrentLive")
 
 # ActiveX constants:
 set(FBTYPELIB_NAME btlivelib)
