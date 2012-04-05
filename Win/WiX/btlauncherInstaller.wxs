@@ -11,7 +11,15 @@
                 OnlyDetect="no" IgnoreRemoveFailure="yes"
                 MigrateFeatures="yes" />
         </Upgrade>
-     
+
+      <!--Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/torque.exe" />
+
+      <CustomAction Id="BundledTorque"
+                BinaryKey="BundledTorque"
+                ExeCommand=""
+                Execute="deferred"
+                Impersonate="no"
+                Return="check" />
 
         <Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
 
@@ -20,13 +28,14 @@
                 DllEntry="BTCustomAction"
                 Execute="immediate"
                 Return="check"
-                HideTarget="no" />
+                HideTarget="no" /-->
       
         <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
-            <Custom Action="BTCustomAction" After="InstallInitialize" />
+            <!--Custom Action="BTCustomAction" After="InstallInitialize" />
+            <Custom Action="BundledTorque" After="InstallExecute" /-->
         </InstallExecuteSequence>
 
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />

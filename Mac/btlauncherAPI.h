@@ -44,18 +44,12 @@ public:
 
     // Method echo
     FB::variant echo(const FB::variant& msg);
-	void downloadProgram(const std::string& val, const std::string& version, const FB::JSObjectPtr& callback);
-	void gotDownloadProgram(const FB::JSObjectPtr& callback, 
-										std::string& program,
-										std::string& version,
-									   bool success,
-									   const FB::HeaderMap& headers,
-									   const boost::shared_array<uint8_t>& data,
-									   const size_t size);
+    void ajax(const std::string& url, const FB::JSObjectPtr& callback);
+	void downloadProgram(const std::string& val, const FB::JSObjectPtr& callback);
 	std::string getInstallPath(const std::string& val);
 	std::string getInstallVersion(const std::string& val);
 	FB::variant runProgram(const std::string& program, const FB::JSObjectPtr& callback);
-	FB::variant isRunning(const std::string& val);
+	FB::VariantList isRunning(const std::string& val);
 	FB::VariantList stopRunning(const std::string& val);
 
     // Event helpers
@@ -67,16 +61,23 @@ public:
     void testEvent(const FB::variant& s);
 
 private:
-	int isInstalledAndUpToDate();
-	int isLiveRunning();
-    void getInstalledVersion();
 	int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);
-
-    pid_t m_live_pid;
-	std::string installPath;
-    std::string liveVersion;
+    std::string installPath;
     btlauncherWeakPtr m_plugin;
     FB::BrowserHostPtr m_host;
+    
+    void gotDownloadProgram(const FB::JSObjectPtr& callback, 
+										std::string& program,
+									   bool success,
+									   const FB::HeaderMap& headers,
+									   const boost::shared_array<uint8_t>& data,
+									   const size_t size);
+									   
+	void gotajax(const FB::JSObjectPtr& callback, 
+									bool success,
+									const FB::HeaderMap& headers,
+									const boost::shared_array<uint8_t>& data,
+									const size_t size);									   
 };
 
 #endif // H_btlauncherAPI

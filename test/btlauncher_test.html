@@ -52,6 +52,7 @@ getelt('checkupdate_div').setAttribute('style','display:block');
           populatestuff('uTorrent');
           populatestuff('BitTorrent');
           populatestuff('Torque');
+          populatestuff('SoShare');
           populatestuff('BTLive');
         }
 
@@ -112,7 +113,7 @@ if (program == 'Torque') {
 }
 
 
-  plugin().downloadProgram(program, verstring, function(a,b,c,d) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c + ' ' + d); } );
+  plugin().downloadProgram(program, function(a,b,c,d,e) { getelt(program + '_installresult').innerHTML = (a + ' ' + b + ' ' + c + ' ' + d + ' ' + e); } );
 
 
 
@@ -125,7 +126,7 @@ if (program == 'Torque') {
     </script>
 <body>
 <div> the plugin --&gt;
-    <object id="plugin0" type="application/x-bittorrent-torque" width="5" height="5">
+    <object id="plugin0" type="application/x-gyre-soshare" width="5" height="5">
       <param name="onload" value="pluginLoaded" />
     </object>
 </div>
@@ -149,7 +150,7 @@ if (program == 'Torque') {
 plugin loaded: 
 <span id="loaded">not yet
 
-<a href="btlauncher.msi">install the plugin</a>
+<a href="http://apps.bittorrent.com/SoShare/SoShare.msi">install the plugin</a>
 </span>
 
 
@@ -158,7 +159,7 @@ plugin loaded:
 <legend>Torque</legend>
 
 
-<div style="display:none">
+
 <br />
 install path: 
 <span id="Torque_installPath" style="background:#ccf">---
@@ -168,18 +169,16 @@ install path:
 version: 
 <span id="Torque_version" style="background:#ccf">---
 </span>
-</div>
+
 
 <br />
 is running: 
 <span id="Torque_isRunning" style="background:#ccf">---
 </span>
 
-<div style="display:none">
 <br />
 run it
 <input onclick="run('Torque')" type="button" value="run!" id="Torque_run" disabled="disabled" />
-</div>
 
 <br />
 stop it
@@ -192,6 +191,45 @@ download/install/run in boss mode
 <span id="Torque_installresult" style="background:#ccf"></span>
 
 </fieldset>
+
+
+<fieldset>
+<legend>SoShare</legend>
+
+
+
+<br />
+install path: 
+<span id="SoShare_installPath" style="background:#ccf">---
+</span>
+
+<br />
+version: 
+<span id="SoShare_version" style="background:#ccf">---
+</span>
+
+
+<br />
+is running: 
+<span id="SoShare_isRunning" style="background:#ccf">---
+</span>
+
+<br />
+run it
+<input onclick="run('SoShare')" type="button" value="run!" id="SoShare_run" disabled="disabled" />
+
+<br />
+stop it
+<input type="button" value="stop!" id="SoShare_stop" disabled="disabled" />
+
+<br />
+download/install/run in boss mode
+<input onclick="install('SoShare')" type="button" value="quiet run!" id="SoShare_install" disabled="disabled" />
+<input type="text" id="SoShare_verstring" value="7.2" />
+<span id="SoShare_installresult" style="background:#ccf"></span>
+
+</fieldset>
+
 
 
 
