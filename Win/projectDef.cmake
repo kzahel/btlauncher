@@ -15,7 +15,8 @@ file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 # use this to add preprocessor definitions
 add_definitions(
-    /D "_ATL_STATIC_REGISTRY"
+    /D "_ATL_STATIC_REGISTRY" 
+    /D${PREPROCESSOR_DEFINE}
 )
 
 SOURCE_GROUP(Win FILES ${PLATFORM})

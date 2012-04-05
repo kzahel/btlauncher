@@ -35,15 +35,10 @@ public:
 
     btlauncherPtr getPlugin();
 
-    // Read/Write property ${PROPERTY.ident}
-    std::string get_testString();
-    void set_testString(const std::string& val);
-
     // Read-only property ${PROPERTY.ident}
     std::string get_version();
 
     // Method echo
-    FB::variant echo(const FB::variant& msg);
     void ajax(const std::string& url, const FB::JSObjectPtr& callback);
 	void downloadProgram(const std::string& val, const FB::JSObjectPtr& callback);
 	std::string getInstallPath(const std::string& val);
@@ -51,14 +46,6 @@ public:
 	FB::variant runProgram(const std::string& program, const FB::JSObjectPtr& callback);
 	FB::VariantList isRunning(const std::string& val);
 	FB::VariantList stopRunning(const std::string& val);
-
-    // Event helpers
-    FB_JSAPI_EVENT(fired, 3, (const FB::variant&, bool, int));
-    FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
-    FB_JSAPI_EVENT(notify, 0, ());
-
-    // Method test-event
-    void testEvent(const FB::variant& s);
 
 private:
 	int GetBSDProcessList(kinfo_proc **procList, size_t *procCount);

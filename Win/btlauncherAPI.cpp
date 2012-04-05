@@ -25,7 +25,13 @@
 #define INSTALL_REG_PATH _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\")
 #define MSIE_ELEVATION _T("Software\\Microsoft\\Internet Explorer\\Low Rights\\ElevationPolicy")
 #define MSIE_ELEVATION_GUID "ECC81F59-D6B1-46A4-B5E8-900FB424B95D"
-#define PLUGIN_DL "http://apps.bittorrent.com/SoShare/SoShare.msi"
+
+#ifdef LIVE
+  #define PLUGIN_DL "http://s3.amazonaws.com/live-installer/LivePlugin.msi"
+#else
+  #define PLUGIN_DL "http://live.bittorrent.com/SoShare/SoShare.msi"
+#endif
+
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
@@ -58,21 +64,18 @@ BOOL write_elevation(const std::wstring& path, const std::wstring& name);
 
 btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr& host) : m_plugin(plugin), m_host(host)
 {
-    registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
 	registerMethod("getInstallVersion", make_method(this, &btlauncherAPI::getInstallVersion));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
-	registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
-	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
-    // Read-write property
-    registerProperty("testString",
-                     make_property(this,
-                        &btlauncherAPI::get_testString,
-                        &btlauncherAPI::set_testString));
+
+	#ifdef SHARE
+		registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
+		registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
+	#endif
 
     // Read-only property
     registerProperty("version",
@@ -125,14 +128,6 @@ void btlauncherAPI::set_testString(const std::string& val)
 std::string btlauncherAPI::get_version()
 {
     return FBSTRING_PLUGIN_VERSION;
-}
-
-// Method echo
-FB::variant btlauncherAPI::echo(const FB::variant& msg)
-{
-    static int n(0);
-    fire_echo(msg, n++);
-    return msg;
 }
 
 void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args) {

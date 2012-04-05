@@ -42,7 +42,6 @@ public:
     std::string get_version();
 
     // Method echo
-    FB::variant echo(const FB::variant& msg);
 	void ajax(const std::string& url, const FB::JSObjectPtr& callback);
 	void checkForUpdate(const FB::JSObjectPtr& callback);
 	void gotCheckForUpdate(const FB::JSObjectPtr& callback, 
@@ -57,11 +56,6 @@ public:
 	FB::variant enablePairing(const std::wstring& val, const std::wstring& key);
 	FB::VariantList isRunning(const std::wstring& val);
 	FB::VariantList stopRunning(const std::wstring& val);
-
-    // Event helpers
-    FB_JSAPI_EVENT(fired, 3, (const FB::variant&, bool, int));
-    FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
-    FB_JSAPI_EVENT(notify, 0, ());
 
     // Method test-event
 	void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args);

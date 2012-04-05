@@ -163,8 +163,6 @@ static void child_handler(int sig)
 ///////////////////////////////////////////////////////////////////////////////
 btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr& host) : m_plugin(plugin), m_host(host)
 {
-    registerMethod("echo",      make_method(this, &btlauncherAPI::echo));
-    registerMethod("testEvent", make_method(this, &btlauncherAPI::testEvent));
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
 	registerMethod("getInstallVersion", make_method(this, &btlauncherAPI::getInstallVersion));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
@@ -225,20 +223,6 @@ std::string btlauncherAPI::get_version()
 {
     return FBSTRING_PLUGIN_VERSION;
 }
-
-// Method echo
-FB::variant btlauncherAPI::echo(const FB::variant& msg)
-{
-    static int n(0);
-    fire_echo(msg, n++);
-    return msg;
-}
-
-void btlauncherAPI::testEvent(const FB::variant& var)
-{
-    fire_fired(var, true, 1);
-}
-
 
 #define bufsz 2048
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 

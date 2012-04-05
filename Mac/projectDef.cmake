@@ -15,7 +15,7 @@ file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 # use this to add preprocessor definitions
 add_definitions(
-    
+    /D${PREPROCESSOR_DEFINE}
 )
 
 
