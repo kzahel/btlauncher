@@ -41,7 +41,7 @@ using namespace std;
 
 #define BTLIVE_INFO_PATH "/BTLive.app/Contents/Info.plist"
 #define BTLIVE_EXE_PATH "/BTLive.app/Contents/MacOS/BTLive"
-#define BTLIVE_DOWNLOAD_URL "http://live-installer.s3.amazonaws.com/live.tar"
+#define BTLIVE_DOWNLOAD_URL "http://live-installer.s3.amazonaws.com/live.tar.gz"
 
 #define SOSHARE_INFO_PATH "/SoShare.app/Contents/Info.plist"
 #define SOSHARE_EXE_PATH "/SoShare.app/Contents/MacOS/SoShare"
