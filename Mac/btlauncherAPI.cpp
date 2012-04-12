@@ -33,11 +33,16 @@
 #include <libxml/xpath.h>
 #include <CoreServices/CoreServices.h>
 
-
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 using namespace std;
+
+#ifdef LIVE
+#define PLUGIN_DL "http://s3.amazonaws.com/live-installer/LivePlugin.pkg"
+#else
+#define PLUGIN_DL "http://live.bittorrent.com/SoShare/SoShare.pkg"
+#endif
 
 #define BTLIVE_INFO_PATH "/BTLive.app/Contents/Info.plist"
 #define BTLIVE_EXE_PATH "/BTLive.app/Contents/MacOS/BTLive"
