@@ -168,14 +168,20 @@ static void child_handler(int sig)
 ///////////////////////////////////////////////////////////////////////////////
 btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostPtr& host) : m_plugin(plugin), m_host(host)
 {
+    
 	registerMethod("getInstallPath", make_method(this, &btlauncherAPI::getInstallPath));
 	registerMethod("getInstallVersion", make_method(this, &btlauncherAPI::getInstallVersion));
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
-	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
-	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
+	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
+    
+#ifdef SHARE
+    registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+    registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
+    registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
     registerProperty("version", make_property(this, &btlauncherAPI::get_version));
+#endif    
 	
 	FSRef ref;
     OSType folderType = kApplicationSupportFolderType;
