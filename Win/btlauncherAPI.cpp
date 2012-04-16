@@ -34,7 +34,7 @@
 
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
-#define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
+#define LV_DL "http://s3.amazonaws.com/live-installer/BTLive.exe"
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 #define SOSHARE_DL "http://download.utorrent.com/soshare/latest/SoShare.exe"
 
@@ -69,10 +69,10 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("isRunning", make_method(this, &btlauncherAPI::isRunning));
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
-	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
 
 	#ifdef SHARE
+		registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
 		registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
 		registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	#endif
