@@ -655,7 +655,7 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 	
 	//HINSTANCE ret = (HINSTANCE)0;
 	BOOL ret = FALSE;
-	if (isRunning(program).size() == 0) {
+	if (!isRunning(program).cast<BOOL>()) {
 		ret = launch_program(program, _T(""));
 		if(ret) {
 			OutputDebugString(_T("runProgram CALLBACK SUCCESS"));
@@ -695,8 +695,7 @@ BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 	return TRUE;
 }
 
-FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
-	FB::VariantList list;
+FB::variant btlauncherAPI::stopRunning(const std::wstring& val) {
 	if (wcsstr(val.c_str(), _T(BT_HEXCODE)) || wcsstr(val.c_str(), _T(BTLIVE_CODE))) {
 		HWND hWnd = FindWindow( val.c_str(), NULL );
 		DWORD pid;
@@ -704,18 +703,16 @@ FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
 		parent = GetWindowThreadProcessId(hWnd, &pid);
 		HANDLE pHandle = OpenProcess(PROCESS_TERMINATE, NULL, pid);
 		if (! pHandle) {
-			list.push_back("could not open process");
-			list.push_back(GetLastError());
+			return FALSE;
 		} else {
 			BOOL result = TerminateProcess(pHandle, 0);
-			list.push_back("ok");
-			list.push_back(result);
+			return result;
 		}
 	}
-	return list;
+	return FALSE;
 }
 
-FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
+FB::variant btlauncherAPI::isRunning(const std::wstring& val) {
 	OutputDebugString(_T("isRunning ENTER"));
 	OutputDebugString(val.c_str());
 	FB::VariantList list;
@@ -724,7 +721,7 @@ FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
 	cbdata.name = val;
 	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
 	OutputDebugString(_T("isRunning EXIT"));
-	return cbdata.list;	
+	return (cbdata.list.size() > 0) ? TRUE : FALSE;	
 }
 
 bool btlauncherAPI::isSupported(std::wstring program) {
