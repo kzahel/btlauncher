@@ -227,6 +227,10 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
+	if(!success) {
+		do_callback(callback, FB::variant_list_of(false)("getDownloadProgram")(success));
+	}
+
 	TCHAR temppath[500];
 	DWORD gettempresult = GetTempPath(500, temppath);
 	if (! gettempresult) {
@@ -397,6 +401,14 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
 						    const FB::HeaderMap& headers,
 						    const boost::shared_array<uint8_t>& data,
 						    const size_t size) {
+
+	FB::VariantMap response;
+	response["allowed"] = true;
+	response["success"] = success;
+
+	if(!success) {
+		do_callback(callback, FB::variant_list_of(response));
+	}
 	FB::VariantMap outHeaders;
 	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
         if (headers.count(it->first) > 1) {
@@ -409,14 +421,10 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
             outHeaders[it->first] = it->second;
         }
     }
-	FB::VariantMap response;
 	response["headers"] = outHeaders;
-	response["allowed"] = true;
-	response["success"] = success;
 	response["size"] = size;
 	std::string result = std::string((const char*) data.get(), size);
 	response["data"] = result;
-	
 	do_callback(callback, FB::variant_list_of(response));
 }
 
