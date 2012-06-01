@@ -227,6 +227,8 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size) {
+	OutputDebugString(_T("gotDownloadProgram ENTER"));
+										   
 	if(!success) {
 		do_callback(callback, FB::variant_list_of(false)("getDownloadProgram")(success));
 	}
@@ -235,6 +237,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	DWORD gettempresult = GetTempPath(500, temppath);
 	if (! gettempresult) {
 		do_callback(callback, FB::variant_list_of(false)("GetTempPath")(GetLastError()));
+		OutputDebugString(_T("gotDownloadProgram EXIT"));
 		return;
 	}
 	std::wstring folder(temppath);
@@ -246,6 +249,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	BOOL result = CreateDirectory( folder.c_str(), NULL );
 	if (! result) {
 		do_callback(callback, FB::variant_list_of(false)("error creating directory")(GetLastError()));
+		OutputDebugString(_T("gotDownloadProgram EXIT"));
 		return;
 	}
 	std::wstring syspath(folder);
@@ -256,6 +260,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	HANDLE hFile = CreateFile( syspath.c_str(), GENERIC_WRITE | GENERIC_EXECUTE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL );
 	if (hFile == INVALID_HANDLE_VALUE) {
 		do_callback(callback, FB::variant_list_of(false)(GetLastError()));
+		OutputDebugString(_T("gotDownloadProgram EXIT"));
 		return;
 	}
 	PVOID ptr = (VOID*) data.get();
@@ -265,6 +270,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	
 	if (! RESULT) {
 		do_callback(callback, FB::variant_list_of("FILE")(false)(GetLastError()));
+		OutputDebugString(_T("gotDownloadProgram EXIT"));
 		return;
 	}
 
@@ -289,21 +295,27 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	wchar_t * pwszArgs = new wchar_t[args.size() + 1];
 	wcscpy_s(pwszArgs, args.size() + 1, args.c_str());
 
+	OutputDebugString(pwszParam);
+	OutputDebugString(pwszArgs);
 	BOOL bProc = FALSE;
 	if(RunningVistaOrGreater()) {
 		BOOL blocking = false;
+		OutputDebugString(_T("gotDownloadProgram RunAsAdministrator"));
 		bProc = RunAsAdministrator(pwszParam, pwszArgs, blocking, 0, false);
 	} else {
 		//Test on XP! pwszArgs may need to be Param+Args, where it is currently just args
+		OutputDebugString(_T("gotDownloadProgram CreateProcess"));
 		bProc = CreateProcess(pwszParam, pwszArgs, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 	}
 
 	if(bProc) {
+		OutputDebugString(_T("gotDownloadProgram SUCCESS"));
 		do_callback( callback, FB::variant_list_of("PROCESS")(true)(installcommand.c_str())(GetLastError())(pairingkey));
 	} else {
+		OutputDebugString(_T("gotDownloadProgram FAILURE"));
 		do_callback( callback, FB::variant_list_of("PROCESS")(false)(installcommand.c_str())(GetLastError()));
 	}
-
+	OutputDebugString(_T("gotDownloadProgram EXIT"));
 }
 
 void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback, 
@@ -384,6 +396,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 }
 
 void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
+	OutputDebugString(_T("ajax ENTER"));
 	if (FB::URI::fromString(url).domain != "127.0.0.1") {
 		FB::VariantMap response;
 		response["allowed"] = false;
@@ -394,6 +407,7 @@ void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
 		);
+	OutputDebugString(_T("ajax EXIT"));
 }
 
 void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback, 
@@ -402,12 +416,17 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
 						    const boost::shared_array<uint8_t>& data,
 						    const size_t size) {
 
+	OutputDebugString(_T("gotajax ENTER"));
+
 	FB::VariantMap response;
 	response["allowed"] = true;
 	response["success"] = success;
 
 	if(!success) {
 		do_callback(callback, FB::variant_list_of(response));
+		OutputDebugString(_T("gotajax FAILURE"));
+		OutputDebugString(_T("gotajax EXIT"));
+		return;
 	}
 	FB::VariantMap outHeaders;
 	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
@@ -426,9 +445,15 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
 	std::string result = std::string((const char*) data.get(), size);
 	response["data"] = result;
 	do_callback(callback, FB::variant_list_of(response));
+
+	OutputDebugString(_T("gotajax SUCCESS"));
+	OutputDebugString(_T("gotajax EXIT"));
 }
 
 void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+	OutputDebugString(_T("downloadProgram ENTER"));
+	OutputDebugString(program.c_str());
+
 	std::string url;
 
 	if (wcsstr(program.c_str(), _T("uTorrent"))) {
@@ -450,6 +475,7 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObj
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
 		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
 	);
+	OutputDebugString(_T("downloadProgram EXIT"));
 }
 
 
@@ -514,14 +540,19 @@ BOOL setRegDwordValue(const std::wstring& path, const std::wstring& key, DWORD v
 }
 
 std::wstring btlauncherAPI::getInstallVersion(const std::wstring& program) {	
+	OutputDebugString(_T("getInstallVersion ENTER"));
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
+	OutputDebugString(program.c_str());
 	std::wstring reg_group = std::wstring(INSTALL_REG_PATH).append( program );
+	OutputDebugString(reg_group.c_str());
 	std::wstring ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_LOCAL_MACHINE );
 	if (ret.empty()) {
 		ret = getRegStringValue( reg_group, _T("DisplayVersion"), HKEY_CURRENT_USER );
 	}
+	OutputDebugString(ret.c_str());
+	OutputDebugString(_T("getInstallVersion EXIT"));
 	return ret;
 }
 
@@ -535,10 +566,15 @@ std::wstring get_install_path(const std::wstring& program) {
 }
 
 std::wstring btlauncherAPI::getInstallPath(const std::wstring& program) {
+	OutputDebugString(_T("getInstallPath ENTER"));
 	if (!this->isSupported(program)) {
+		OutputDebugString(_T("getInstallPath EXIT"));
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
-	return get_install_path(program);
+	std::wstring ret = get_install_path(program);
+	OutputDebugString(ret.c_str());
+	OutputDebugString(_T("getInstallPath EXIT"));
+	return ret;
 }
 
 std::wstring getExecutablePath(const std::wstring& program) {
@@ -611,6 +647,8 @@ FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std:
 }
 
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
+	OutputDebugString(_T("runProgram ENTER"));
+	OutputDebugString(program.c_str());
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
@@ -619,8 +657,14 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 	BOOL ret = FALSE;
 	if (isRunning(program).size() == 0) {
 		ret = launch_program(program, _T(""));
+		if(ret) {
+			OutputDebugString(_T("runProgram CALLBACK SUCCESS"));
+		} else {
+			OutputDebugString(_T("runProgram CALLBACK FAILURE"));
+		}
 		do_callback(callback, FB::variant_list_of(false)(ret));
 	}
+	OutputDebugString(_T("runProgram EXIT"));
 	return ret;
 }
 
@@ -642,6 +686,9 @@ BOOL CALLBACK EnumWindowCB(HWND hWnd, LPARAM lParam) {
 		(wcsstr(classname, _T(BT_HEXCODE)) || wcsstr(classname, _T(BTLIVE_CODE)))) {	
 		//FB::JSObjectPtr& callback = *((FB::JSObjectPtr*)lParam);
 		//cbdata->found = true;
+		OutputDebugString(_T("EnumWindowCB SUCCESS"));
+		OutputDebugString(classname);
+
 		cbdata->list.push_back( std::wstring(classname) );
 		//return FALSE;
 	}
@@ -669,11 +716,14 @@ FB::VariantList btlauncherAPI::stopRunning(const std::wstring& val) {
 }
 
 FB::VariantList btlauncherAPI::isRunning(const std::wstring& val) {
+	OutputDebugString(_T("isRunning ENTER"));
+	OutputDebugString(val.c_str());
 	FB::VariantList list;
 	callbackdata cbdata;
 	cbdata.list = list;
 	cbdata.name = val;
 	EnumWindows(EnumWindowCB, (LPARAM) &cbdata);
+	OutputDebugString(_T("isRunning EXIT"));
 	return cbdata.list;	
 }
 
