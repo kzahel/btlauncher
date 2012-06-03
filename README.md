@@ -15,4 +15,3 @@ git clone https://github.com/firebreath/FireBreath.git
 
 build instructions (osx):
 - install [cmake](http://www.cmake.org/files/v2.8/cmake-2.8.8-Darwin64-universal.dmg)
-```
