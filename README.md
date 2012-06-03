@@ -6,7 +6,7 @@ see test/fblauncher_test.html
 
 build instructions (windows):
 - install cmake
-- clone FireBreath
+- clone FireBreath  
 ```
 git clone https://github.com/firebreath/FireBreath.git
 ```
