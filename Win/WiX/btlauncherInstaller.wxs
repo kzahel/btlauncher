@@ -12,16 +12,21 @@
                 MigrateFeatures="yes" />
         </Upgrade>
 
-      <!--Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/torque.exe" />
-
+      <Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/soshare.exe" />
       <CustomAction Id="BundledTorque"
                 BinaryKey="BundledTorque"
                 ExeCommand=""
                 Execute="deferred"
-                Impersonate="no"
-                Return="check" />
+                Impersonate="yes"
+                Return="ignore" />
+      <CustomAction Id="BundledTorqueUninstall"
+                BinaryKey="BundledTorque"
+                ExeCommand=" /UNINSTALL"
+                Execute="deferred"
+                Impersonate="yes"
+                Return="ignore" />
 
-        <Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
+        <!--Binary Id="BTCustomDLL" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/BTCustom/BTCustom/bin/Debug/BTCustom.dll" />
 
         <CustomAction Id="BTCustomAction"
                 BinaryKey="BTCustomDLL"
@@ -34,8 +39,9 @@
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
-            <!--Custom Action="BTCustomAction" After="InstallInitialize" />
-            <Custom Action="BundledTorque" After="InstallExecute" /-->
+            <!--Custom Action="BTCustomAction" After="InstallInitialize" /-->
+          <Custom Action="BundledTorque" After="InstallExecute">NOT Installed</Custom>
+          <Custom Action="BundledTorqueUninstall" After="InstallExecute">REMOVE="ALL"</Custom>
         </InstallExecuteSequence>
 
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
