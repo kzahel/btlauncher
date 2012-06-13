@@ -29,7 +29,7 @@
 #ifdef LIVE
   #define PLUGIN_DL "http://s3.amazonaws.com/live-installer/LivePlugin.msi"
 #else
-  #define PLUGIN_DL "http://live.bittorrent.com/SoShare/SoShare.msi"
+  #define PLUGIN_DL "http://torque.bittorrent.com/SoShare.msi"
 #endif
 
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
@@ -298,7 +298,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	OutputDebugString(pwszParam);
 	OutputDebugString(pwszArgs);
 	BOOL bProc = FALSE;
-	if(RunningVistaOrGreater()) {
+	if(FALSE && RunningVistaOrGreater()) {
 		BOOL blocking = false;
 		OutputDebugString(_T("gotDownloadProgram RunAsAdministrator"));
 		bProc = RunAsAdministrator(pwszParam, pwszArgs, blocking, 0, false);
@@ -371,7 +371,7 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
 
 	BOOL bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 	if(bProc) {
-		do_callback(callback, FB::variant_list_of("CreateProcess")(true)(installcommand.c_str())(GetLastError()));
+		do_callback(callback, FB::variant_list_of("CreateProcess")(true)(installcommand.c_str())(0));
 	} else {
 		do_callback(callback, FB::variant_list_of("CreateProcess")(false)(installcommand.c_str())(GetLastError()));
 	}
