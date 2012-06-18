@@ -46,7 +46,7 @@
 
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
 
-        <Icon Id="icon.ico" SourceFile="../../${PLUGIN_NAME}.ico"/>
+        <Icon Id="icon.ico" SourceFile="../../../icons/${PLUGIN_NAME}.ico"/>
         <Property Id="ARPPRODUCTICON" Value="icon.ico" />      
       
         <Directory Id="TARGETDIR" Name="SourceDir">
