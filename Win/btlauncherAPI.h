@@ -49,6 +49,7 @@ public:
 									   const FB::HeaderMap& headers,
 									   const boost::shared_array<uint8_t>& data,
 									   const size_t size);
+	int getPID();
 	void downloadProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
 	std::wstring getInstallPath(const std::wstring& val);
 	std::wstring getInstallVersion(const std::wstring& val);

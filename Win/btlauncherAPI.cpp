@@ -71,6 +71,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
+	registerMethod("getPID", make_method(this, &btlauncherAPI::getPID));
 
 	#ifdef SHARE
 		registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
@@ -219,6 +220,10 @@ std::wstring GetRandomKey() {
 	std::wstring ret(tmp, 40);
 	assert(ret.size() == 40);
 	return ret;
+}
+
+int btlauncherAPI::getPID() {
+	return GetCurrentProcessId();
 }
 
 void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback, 
