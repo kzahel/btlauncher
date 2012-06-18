@@ -55,6 +55,7 @@ public:
 	std::wstring getInstallVersion(const std::wstring& val);
 	FB::variant runProgram(const std::wstring& val, const FB::JSObjectPtr& callback);
 	FB::variant enablePairing(const std::wstring& val, const std::wstring& key);
+	FB::variant pair(const std::wstring& val);
 	FB::variant isRunning(const std::wstring& val);
 	FB::variant stopRunning(const std::wstring& val);
 

@@ -38,8 +38,7 @@
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 #define SOSHARE_DL "http://download.utorrent.com/soshare/latest/SoShare.exe"
 
-#define PAIRING_DOMAIN "getshareapp.com"
-//#define PAIRING_DOMAIN "192.168.56.1"
+#define PAIRING_DOMAIN "torque.bittorrent.com"
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -76,6 +75,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	#ifdef SHARE
 		registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
 		registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
+		registerMethod("pair", make_method(this, &btlauncherAPI::pair));
 	#endif
 
     // Read-only property
@@ -632,15 +632,44 @@ BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
 	return bProc;
 }
 
-FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std::wstring& key) {
+FB::variant btlauncherAPI::pair(const std::wstring& program) {
+	OutputDebugString(_T("pair ENTER"));
 	if (!this->isSupported(program)) {
 		return _T(NOT_SUPPORTED_MESSAGE);
 	}
 	std::string location = m_host->getDOMWindow()->getLocation();
 	FB::URI uri = FB::URI::fromString(location);
-	if (true || uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
-		
+	OutputDebugStringA(location.c_str());
+	if (uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
+		OutputDebugString(_T("access granted"));
 	} else {
+		OutputDebugString(_T("access denied"));
+		OutputDebugString(_T("pair EXIT"));
+		return _T("access denied");
+	}
+	//std::string location = w->getLocation();
+	BOOL ret = FALSE;
+	std::wstring key = GetRandomKey();
+	std::wstring switches = std::wstring(_T(" /PAIR "));
+	switches.append(key);
+	ret = launch_program(program, switches);
+	OutputDebugString(_T("pair EXIT"));
+	return key;
+}
+
+FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std::wstring& key) {
+	OutputDebugString(_T("enablePairing ENTER"));
+	if (!this->isSupported(program)) {
+		return _T(NOT_SUPPORTED_MESSAGE);
+	}
+	std::string location = m_host->getDOMWindow()->getLocation();
+	FB::URI uri = FB::URI::fromString(location);
+	OutputDebugStringA(location.c_str());
+	if (uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
+		OutputDebugString(_T("access granted"));
+	} else {
+		OutputDebugString(_T("access denied"));
+		OutputDebugString(_T("enablePairing EXIT"));
 		return _T("access denied");
 	}
 	//std::string location = w->getLocation();
@@ -648,6 +677,7 @@ FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std:
 	std::wstring switches = std::wstring(_T(" /PAIR "));
 	switches.append(key);
 	ret = launch_program(program, switches);
+	OutputDebugString(_T("enablePairing EXIT"));
 	return ret;
 }
 
