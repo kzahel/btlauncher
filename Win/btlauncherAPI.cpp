@@ -38,7 +38,14 @@
 #define TORQUE_DL "http://download.utorrent.com/torque/latest/Torque.exe"
 #define SOSHARE_DL "http://download.utorrent.com/soshare/latest/SoShare.exe"
 
-#define PAIRING_DOMAIN "torque.bittorrent.com"
+#define lenof(x) (sizeof(x)/sizeof(x[0]))
+
+char* PAIRING_DOMAINS[] = { 
+	"torque.bittorrent.com", 
+	"soshare.it",
+	"soshareit.com",
+	"paddleover.com"
+};
 
 #define LIVE_NAME "BTLive"
 #define UTORRENT_NAME "uTorrent"
@@ -640,7 +647,12 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 	std::string location = m_host->getDOMWindow()->getLocation();
 	FB::URI uri = FB::URI::fromString(location);
 	OutputDebugStringA(location.c_str());
-	if (uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
+
+	bool allowed = false;
+	for(int i = 0; i < lenof(PAIRING_DOMAINS); i++) {
+		allowed |= (uri.domain.find(PAIRING_DOMAINS[i])!=std::string::npos);
+	}
+	if (allowed) {
 		OutputDebugString(_T("access granted"));
 	} else {
 		OutputDebugString(_T("access denied"));
@@ -665,7 +677,13 @@ FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std:
 	std::string location = m_host->getDOMWindow()->getLocation();
 	FB::URI uri = FB::URI::fromString(location);
 	OutputDebugStringA(location.c_str());
-	if (uri.domain.find(PAIRING_DOMAIN)!=std::string::npos) {
+
+
+	bool allowed = false;
+	for(int i = 0; i < lenof(PAIRING_DOMAINS); i++) {
+		allowed |= (uri.domain.find(PAIRING_DOMAINS[i])!=std::string::npos);
+	}
+	if (allowed) {
 		OutputDebugString(_T("access granted"));
 	} else {
 		OutputDebugString(_T("access denied"));
