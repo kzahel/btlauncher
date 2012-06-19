@@ -7,7 +7,7 @@
 
 set(PREPROCESSOR_DEFINE "SHARE")
 set(PLUGIN_NAME "SoShare")
-set(PLUGIN_PREFIX "BTTQ")
+set(PLUGIN_PREFIX "GYSS")
 set(COMPANY_NAME "Gyre")
 
 # ActiveX constants:
@@ -35,7 +35,7 @@ set(MOZILLA_PLUGINID "gyre.com/soshare")
 # strings
 set(FBSTRING_CompanyName "Gyre, Inc")
 set(FBSTRING_FileDescription "Launches Gyre SoShare")
-set(FBSTRING_PLUGIN_VERSION "4.3.5")
+set(FBSTRING_PLUGIN_VERSION "4.3.6")
 set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "SoShare Plugin")

@@ -5,19 +5,19 @@
 #
 #\**********************************************************/
 
-set(PREPROCESSOR_DEFINE "SHARE")
-set(PLUGIN_NAME "SoShare")
-set(PLUGIN_PREFIX "GYSS")
-set(COMPANY_NAME "Gyre")
+set(PREPROCESSOR_DEFINE "TORQUE")
+set(PLUGIN_NAME "Torque")
+set(PLUGIN_PREFIX "BTTQ")
+set(COMPANY_NAME "BitTorrent")
 
 # ActiveX constants:
-set(FBTYPELIB_NAME soshareLib)
-set(FBTYPELIB_DESC "SoShare Type Library")
-set(IFBControl_DESC "SoShare Control Interface")
-set(FBControl_DESC "SoShare Control Class")
-set(IFBComJavascriptObject_DESC "SoShare IComJavascriptObject Interface")
-set(FBComJavascriptObject_DESC "SoShare ComJavascriptObject Class")
-set(IFBComEventSource_DESC "SoShare IFBComEventSource Interface")
+set(FBTYPELIB_NAME torqueLib)
+set(FBTYPELIB_DESC "Torque Type Library")
+set(IFBControl_DESC "Torque Control Interface")
+set(FBControl_DESC "Torque Control Class")
+set(IFBComJavascriptObject_DESC "Torque IComJavascriptObject Interface")
+set(FBComJavascriptObject_DESC "Torque ComJavascriptObject Class")
+set(IFBComEventSource_DESC "Torque IFBComEventSource Interface")
 set(AXVERSION_NUM "1")
 
 # NOTE: THESE GUIDS *MUST* BE UNIQUE TO YOUR PLUGIN/ACTIVEX CONTROL!  YES, ALL OF THEM!
@@ -29,19 +29,19 @@ set(FBComJavascriptObject_GUID 5ebd0eec-2267-58e8-ba4b-fa2943462c6f)
 set(IFBComEventSource_GUID edcf337b-5209-51e1-97d7-7c65319c77e6)
 
 # these are the pieces that are relevant to using it from Javascript
-set(ACTIVEX_PROGID "gyre.soshare")
-set(MOZILLA_PLUGINID "gyre.com/soshare")
+set(ACTIVEX_PROGID "bittorrent.torque")
+set(MOZILLA_PLUGINID "bittorrent.com/torque")
 
 # strings
-set(FBSTRING_CompanyName "Gyre, Inc")
-set(FBSTRING_FileDescription "Launches Gyre SoShare")
+set(FBSTRING_CompanyName "BitTorrent, Inc")
+set(FBSTRING_FileDescription "Launches BitTorrent Torque")
 set(FBSTRING_PLUGIN_VERSION "4.3.6")
-set(FBSTRING_LegalCopyright "Copyright 2012 Gyre, Inc")
+set(FBSTRING_LegalCopyright "Copyright 2012 BitTorrent, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
-set(FBSTRING_ProductName "SoShare Plugin")
+set(FBSTRING_ProductName "Torque Plugin")
 set(FBSTRING_FileExtents "")
-set(FBSTRING_PluginName "SoShare Plugin")
-set(FBSTRING_MIMEType "application/x-gyre-soshare")
+set(FBSTRING_PluginName "Torque Plugin")
+set(FBSTRING_MIMEType "application/x-bittorrent-torque")
 
 # Uncomment this next line if you're not planning on your plugin doing
 # any drawing:
