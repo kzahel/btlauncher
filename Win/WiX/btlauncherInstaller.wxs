@@ -12,7 +12,7 @@
                 MigrateFeatures="yes" />
         </Upgrade>
 
-      <Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/soshare.exe" />
+      <Binary Id="BundledTorque" SourceFile="${CMAKE_CURRENT_SOURCE_DIR}/Bundle/${PLUGIN_NAME}.exe" />
       <CustomAction Id="BundledTorque"
                 BinaryKey="BundledTorque"
                 ExeCommand=""
