@@ -79,11 +79,9 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
 	registerMethod("getPID", make_method(this, &btlauncherAPI::getPID));
 
-	#ifdef SHARE
-		registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
-		registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
-		registerMethod("pair", make_method(this, &btlauncherAPI::pair));
-	#endif
+	registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
+	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
+	registerMethod("pair", make_method(this, &btlauncherAPI::pair));
 
     // Read-only property
     registerProperty("version",
