@@ -41,10 +41,12 @@
 #define lenof(x) (sizeof(x)/sizeof(x[0]))
 
 char* PAIRING_DOMAINS[] = { 
-	"torque.bittorrent.com", 
+	"bittorrent.com", 
+	"utorrent.com",
 	"soshare.it",
 	"soshareit.com",
-	"paddleover.com"
+	"paddleover.com",
+	"kumarethemovie.com"
 };
 
 #define LIVE_NAME "BTLive"
@@ -79,7 +81,6 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
 	registerMethod("getPID", make_method(this, &btlauncherAPI::getPID));
 
-	registerMethod("enablePairing", make_method(this, &btlauncherAPI::enablePairing));
 	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
 	registerMethod("pair", make_method(this, &btlauncherAPI::pair));
 
@@ -139,80 +140,9 @@ std::string btlauncherAPI::get_version()
 void btlauncherAPI::do_callback(const FB::JSObjectPtr& callback, const std::vector<FB::variant>& args) {
 	try {
 		callback->InvokeAsync("", args);
-	} catch (std::exception& e) {
+	} catch (std::exception) {
 		// TODO -- only catch the std::runtime_error("Cannot invoke asynchronously"); (FireBreath JSObject.h)
 	}
-}
-
-void *load_dll_proc(std::string filename, std::string procname) {
-	HMODULE mod = GetModuleHandleA(filename.c_str());
-	if (mod==NULL) {
-		mod = LoadLibraryA(filename.c_str());
-		if (mod == NULL)
-			return NULL;
-	}
-	return (void *) GetProcAddress(mod, procname.c_str());
-}
-
-BOOL RunAsAdministrator(wchar_t* name, wchar_t* cmdline, bool waitforsuccess,
-						int successcode, bool hide)
-{
-	typedef BOOL WINAPI ShellExecuteExProc(LPSHELLEXECUTEINFO lpExecInfo);
-
-	// Win95 doesn't have a stub for ShellExecuteExW so we need to dynload it
-	ShellExecuteExProc* lpShellExecuteEx;
-
-	lpShellExecuteEx =
-		(ShellExecuteExProc*) load_dll_proc("shell32.dll", "ShellExecuteExW");
-
-	assert(lpShellExecuteEx);
-
-	BOOL result = FALSE;
-
-	SHELLEXECUTEINFO sei;
-	memset(&sei, 0, sizeof(SHELLEXECUTEINFO));
-
-	sei.cbSize = sizeof(sei);
-	sei.lpVerb = _T("runas");
-	sei.lpFile = name;
-	sei.lpParameters = cmdline;
-	sei.nShow = hide ? SW_HIDE : SW_SHOWNORMAL;
-	sei.fMask = SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI
-				| (waitforsuccess ? SEE_MASK_NOCLOSEPROCESS : 0);
-
-	if((*lpShellExecuteEx)(&sei) == TRUE)
-	{
-		if(!waitforsuccess)
-		{
-			result = TRUE;
-		}
-		else if(sei.hProcess != NULL)
-			{
-				// wait for the process to return exit code for success
-			if(WaitForSingleObject(sei.hProcess, 60000) == WAIT_OBJECT_0)
-			{
-				DWORD dwExitCode;
-				BOOL geresult = GetExitCodeProcess(sei.hProcess, &dwExitCode);
-				if(geresult && dwExitCode == successcode)
-				{
-					result = TRUE;
-				}
-			}
-
-			CloseHandle(sei.hProcess);
-		}
-	}
-
-	return result;
-}
-
-BOOL RunningVistaOrGreater() {
-	OSVERSIONINFO version;
-		
-	version.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
-	::GetVersionEx(&version);
-
-	return version.dwMajorVersion >= 6;
 }
 
 std::wstring GetRandomKey() {
@@ -307,16 +237,10 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 
 	OutputDebugString(pwszParam);
 	OutputDebugString(pwszArgs);
+
 	BOOL bProc = FALSE;
-	if(FALSE && RunningVistaOrGreater()) {
-		BOOL blocking = false;
-		OutputDebugString(_T("gotDownloadProgram RunAsAdministrator"));
-		bProc = RunAsAdministrator(pwszParam, pwszArgs, blocking, 0, false);
-	} else {
-		//Test on XP! pwszArgs may need to be Param+Args, where it is currently just args
-		OutputDebugString(_T("gotDownloadProgram CreateProcess"));
-		bProc = CreateProcess(pwszParam, pwszArgs, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
-	}
+	OutputDebugString(_T("gotDownloadProgram CreateProcess"));
+	bProc = CreateProcess(pwszParam, pwszArgs, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
 
 	if(bProc) {
 		OutputDebugString(_T("gotDownloadProgram SUCCESS"));
@@ -613,7 +537,7 @@ BOOL write_elevation(const std::wstring& path, const std::wstring& name) {
 	return ret;
 }
 
-BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
+BOOL launch_program(const std::wstring& program, const std::wstring& switches, bool wait=false) {
 	//HINSTANCE result = ShellExecute(NULL, NULL, getExecutablePath(program).c_str(), NULL, NULL, NULL);
 	// pops up a security dialog in IE
 
@@ -634,6 +558,9 @@ BOOL launch_program(const std::wstring& program, const std::wstring& switches) {
     wcscpy_s(pwszParam, installcommand.size() + 1, pchrTemp); 
 	BOOL bProc = FALSE;
 	bProc = CreateProcess(NULL, pwszParam, NULL, NULL, FALSE, 0, NULL, NULL, &info, &procinfo);
+	if(wait) {
+		WaitForSingleObject(procinfo.hProcess, INFINITE);
+	}
 	return bProc;
 }
 
@@ -662,39 +589,9 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 	std::wstring key = GetRandomKey();
 	std::wstring switches = std::wstring(_T(" /PAIR "));
 	switches.append(key);
-	ret = launch_program(program, switches);
+	ret = launch_program(program, switches, true);
 	OutputDebugString(_T("pair EXIT"));
 	return key;
-}
-
-FB::variant btlauncherAPI::enablePairing(const std::wstring& program, const std::wstring& key) {
-	OutputDebugString(_T("enablePairing ENTER"));
-	if (!this->isSupported(program)) {
-		return _T(NOT_SUPPORTED_MESSAGE);
-	}
-	std::string location = m_host->getDOMWindow()->getLocation();
-	FB::URI uri = FB::URI::fromString(location);
-	OutputDebugStringA(location.c_str());
-
-
-	bool allowed = false;
-	for(int i = 0; i < lenof(PAIRING_DOMAINS); i++) {
-		allowed |= (uri.domain.find(PAIRING_DOMAINS[i])!=std::string::npos);
-	}
-	if (allowed) {
-		OutputDebugString(_T("access granted"));
-	} else {
-		OutputDebugString(_T("access denied"));
-		OutputDebugString(_T("enablePairing EXIT"));
-		return _T("access denied");
-	}
-	//std::string location = w->getLocation();
-	BOOL ret = FALSE;
-	std::wstring switches = std::wstring(_T(" /PAIR "));
-	switches.append(key);
-	ret = launch_program(program, switches);
-	OutputDebugString(_T("enablePairing EXIT"));
-	return ret;
 }
 
 FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSObjectPtr& callback) {
@@ -707,7 +604,7 @@ FB::variant btlauncherAPI::runProgram(const std::wstring& program, const FB::JSO
 	//HINSTANCE ret = (HINSTANCE)0;
 	BOOL ret = FALSE;
 	if (!isRunning(program).cast<BOOL>()) {
-		ret = launch_program(program, _T(""));
+		ret = launch_program(program, _T(""), false);
 		if(ret) {
 			OutputDebugString(_T("runProgram CALLBACK SUCCESS"));
 		} else {

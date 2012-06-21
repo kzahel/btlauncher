@@ -35,7 +35,7 @@ set(MOZILLA_PLUGINID "bittorrent.com/torque")
 # strings
 set(FBSTRING_CompanyName "BitTorrent, Inc")
 set(FBSTRING_FileDescription "Launches BitTorrent Torque")
-set(FBSTRING_PLUGIN_VERSION "4.3.6")
+set(FBSTRING_PLUGIN_VERSION "4.3.7")
 set(FBSTRING_LegalCopyright "Copyright 2012 BitTorrent, Inc")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "Torque Plugin")
