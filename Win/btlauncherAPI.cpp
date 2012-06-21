@@ -19,6 +19,13 @@
 #include <atlstr.h>
 #include <string.h>
 
+
+#define USE_CURL 0
+
+#if USE_CURL
+#include "curl/curl.h"
+#endif
+
 #define bufsz 2048
 #define BT_HEXCODE "4823DF041B" // BT4823DF041B0D
 #define BTLIVE_CODE "BTLive"
@@ -331,6 +338,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
 	OutputDebugString(_T("ajax ENTER"));
+#if !USE_CURL
 	if (FB::URI::fromString(url).domain != "127.0.0.1") {
 		FB::VariantMap response;
 		response["allowed"] = false;
@@ -342,6 +350,23 @@ void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback
 		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
 		);
 	OutputDebugString(_T("ajax EXIT"));
+#else
+
+    CURL *curl;
+    CURLcode res;
+ 
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "http://firebreath.com");
+        res = curl_easy_perform(curl);
+ 
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+    }
+ 
+    //return res;
+
+#endif
 }
 
 void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback, 
