@@ -347,7 +347,7 @@ void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback
 		return;
 	}
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4), false
 		);
 	OutputDebugString(_T("ajax EXIT"));
 #else
