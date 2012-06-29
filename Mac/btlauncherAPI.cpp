@@ -47,6 +47,10 @@ using namespace std;
 #define SOSHARE_EXE_PATH "/SoShare.app/Contents/MacOS/SoShare"
 #define SOSHARE_DOWNLOAD_URL "http://download.utorrent.com/mac/SoShare.tar.gz"
 
+#define TORQUE_INFO_PATH "/Torque.app/Contents/Info.plist"
+#define TORQUE_EXE_PATH "/Torque.app/Contents/MacOS/Torque"
+#define TORQUE_DOWNLOAD_URL "http://download.utorrent.com/mac/Torque.tar.gz"
+
 #define UNKNOWN_VERSION ""
 
 int btlauncherAPI::GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
@@ -245,6 +249,8 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	std::string url;
 	if (program == "SoShare")
 		url = SOSHARE_DOWNLOAD_URL;
+	else if (program == "Torque")
+		url = TORQUE_DOWNLOAD_URL;
 	else
 		url = BTLIVE_DOWNLOAD_URL;
 	
@@ -274,6 +280,8 @@ void btlauncherAPI::downloadProgram(const std::string& program, const FB::JSObje
 	std::string url;
 	if (program == "SoShare")
 		url = SOSHARE_DOWNLOAD_URL;
+	else if (program == "Torque")
+		url = TORQUE_DOWNLOAD_URL;
 	else
 		url = BTLIVE_DOWNLOAD_URL;
 
@@ -289,6 +297,8 @@ std::string btlauncherAPI::getInstallVersion(const std::string& program) {
 	const char *infoPath;
 	if (program == "SoShare")
 		infoPath = SOSHARE_INFO_PATH;
+	else if (program == "Torque")
+		infoPath = TORQUE_INFO_PATH;
 	else
 		infoPath = BTLIVE_INFO_PATH;
 	
@@ -331,6 +341,8 @@ FB::variant btlauncherAPI::runProgram(const std::string& program, const FB::JSOb
 	string exe = this->installPath;
 	if (program == "SoShare")
 		exe += SOSHARE_EXE_PATH;
+	else if (program == "Torque")
+		exe += TORQUE_EXE_PATH;
 	else
 		exe += BTLIVE_EXE_PATH;
 		
@@ -377,6 +389,8 @@ FB::VariantList btlauncherAPI::stopRunning(const std::string& val) {
         }
     }
 
+	free(procList);
+	
     if (foundIt) {
         list.push_back("ok");
 	} else {
@@ -397,6 +411,9 @@ FB::VariantList btlauncherAPI::isRunning(const std::string& val) {
 			list.push_back(procList[i].kp_proc.p_comm);
 		}
 	}
+	
+	free(procList);
+	
 	return list;
 }
 
