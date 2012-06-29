@@ -35,9 +35,20 @@
 
 #ifdef LIVE
   #define PLUGIN_DL "http://s3.amazonaws.com/live-installer/LivePlugin.msi"
-#else
-  #define PLUGIN_DL "http://torque.bittorrent.com/SoShare.msi"
-#endif
+#endif //LIVE
+
+#ifdef SHARE
+	#define PLUGIN_DL "http://torque.bittorrent.com/SoShare.msi"
+#endif //SHARE
+
+#ifdef TORQUE
+	#define PLUGIN_DL "http://torque.bittorrent.com/Torque.msi"
+#endif //TORQUE
+
+#ifdef CHROME
+	#define PLUGIN_DL "http://torque.bittorrent.com/Chrome.msi"
+#endif //TORQUE
+
 
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
@@ -598,6 +609,7 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 	FB::URI uri = FB::URI::fromString(location);
 	OutputDebugStringA(location.c_str());
 
+#ifndef CHROME
 	bool allowed = false;
 	for(int i = 0; i < lenof(PAIRING_DOMAINS); i++) {
 		allowed |= (uri.domain.find(PAIRING_DOMAINS[i])!=std::string::npos);
@@ -609,6 +621,7 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 		OutputDebugString(_T("pair EXIT"));
 		return _T("access denied");
 	}
+#endif //CHROME
 	//std::string location = w->getLocation();
 	BOOL ret = FALSE;
 	std::wstring key = GetRandomKey();
