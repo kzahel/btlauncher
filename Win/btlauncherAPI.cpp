@@ -64,7 +64,10 @@ char* PAIRING_DOMAINS[] = {
 	"soshare.it",
 	"soshareit.com",
 	"paddleover.com",
-	"kumarethemovie.com"
+	"kumarethemovie.com",
+	"btappjs.com",
+	"onehash.com",
+	"utorrenttoolbox.com"
 };
 
 #define LIVE_NAME "BTLive"
