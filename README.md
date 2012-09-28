@@ -8,6 +8,7 @@ build instructions (windows):
 - install [cmake](http://www.cmake.org/files/v2.8/cmake-2.8.8-win32-x86.exe)
 - install wix installer toolkit
 - clone FireBreath (currently pinned to stable version 1.6)
+
 ```
 git clone https://github.com/firebreath/FireBreath.git
 ```
