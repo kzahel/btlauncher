@@ -9,7 +9,7 @@ build instructions (windows):
 - install wix installer toolkit
 - clone FireBreath (currently pinned to stable version 1.6)
 ```
-git clone https://github.com/firebreath/FireBreath.git
+git clone https://github.com/firebreath/FireBreath.git  
 git checkout firebreath-1.6
 ```
 - follow FireBreath docs to run prep2008.cmd on this project
