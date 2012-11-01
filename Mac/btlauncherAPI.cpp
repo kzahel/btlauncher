@@ -436,6 +436,15 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
 						    const FB::HeaderMap& headers,
 						    const boost::shared_array<uint8_t>& data,
 						    const size_t size) {
+	FB::VariantMap response;
+	response["allowed"] = true;
+	response["success"] = success;
+	
+	if(!success) {
+		callback->InvokeAsync("", FB::variant_list_of(response));
+		return;
+	}
+	
 	FB::VariantMap outHeaders;
 	for (FB::HeaderMap::const_iterator it = headers.begin(); it != headers.end(); ++it) {
         if (headers.count(it->first) > 1) {
@@ -448,10 +457,7 @@ void btlauncherAPI::gotajax(const FB::JSObjectPtr& callback,
             outHeaders[it->first] = it->second;
         }
     }
-	FB::VariantMap response;
 	response["headers"] = outHeaders;
-	response["allowed"] = true;
-	response["success"] = success;
 	response["size"] = size;
 	std::string result = std::string((const char*) data.get(), size);
 	response["data"] = result;
