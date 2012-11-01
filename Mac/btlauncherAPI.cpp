@@ -405,7 +405,7 @@ FB::VariantList btlauncherAPI::isRunning(const std::string& val) {
     size_t procCount = 0;
 	kinfo_proc *procList = NULL;
 	GetBSDProcessList(&procList, &procCount);
-	int i;
+	size_t i;
 	for (i = 0; i < procCount; i++) {
 		if (!strcmp(procList[i].kp_proc.p_comm, val.c_str())) {
 			list.push_back(procList[i].kp_proc.p_comm);
