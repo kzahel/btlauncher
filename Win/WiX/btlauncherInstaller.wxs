@@ -40,8 +40,8 @@
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
             <!--Custom Action="BTCustomAction" After="InstallInitialize" /-->
-          <Custom Action="BundledTorque" After="InstallExecute">NOT Installed</Custom>
-          <Custom Action="BundledTorqueUninstall" After="InstallExecute">REMOVE="ALL"</Custom>
+          <Custom Action="BundledTorque" After="InstallExecute">NOT UPGRADINGPRODUCTCODE AND NOT OLD_VERSION_FOUND</Custom>
+          <Custom Action="BundledTorqueUninstall" After="InstallExecute">REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
         </InstallExecuteSequence>
 
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />

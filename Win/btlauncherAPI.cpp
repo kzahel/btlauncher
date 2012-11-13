@@ -346,7 +346,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 
 	//url.append( itoa(lpTime->wMilliseconds, buf, 10) );
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4), false
 		);
 }
 
@@ -446,7 +446,7 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObj
 	//url = version.c_str();
 		
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4), false
 	);
 	OutputDebugString(_T("downloadProgram EXIT"));
 }
