@@ -40,10 +40,12 @@ public:
 
     // Method echo
     void ajax(const std::string& url, const FB::JSObjectPtr& callback);
+    void checkForUpdate(const FB::JSObjectPtr& callback);
 	void downloadProgram(const std::string& val, const FB::JSObjectPtr& callback);
 	std::string getInstallPath(const std::string& val);
 	std::string getInstallVersion(const std::string& val);
 	FB::variant runProgram(const std::string& program, const FB::JSObjectPtr& callback);
+    void gotCheckForUpdate(const FB::JSObjectPtr& callback, bool success, const FB::HeaderMap& header, const boost::shared_array<uint8_t>& data, const size_t size);
 	FB::VariantList isRunning(const std::string& val);
 	FB::VariantList stopRunning(const std::string& val);
 

@@ -51,6 +51,14 @@ using namespace std;
 #define TORQUE_EXE_PATH "/Torque.app/Contents/MacOS/Torque"
 #define TORQUE_DOWNLOAD_URL "http://download.utorrent.com/mac/Torque.tar.gz"
 
+#ifdef SHARE
+#define PLUGIN_DL "http://torque.bittorrent.com/SoShare.pkg"
+#endif //SHARE
+
+#ifdef TORQUE
+#define PLUGIN_DL "http://torque.bittorrent.com/Torque.pkg"
+#endif //TORQUE
+
 #define UNKNOWN_VERSION ""
 
 int btlauncherAPI::GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
@@ -174,6 +182,7 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
 	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
     registerProperty("version", make_property(this, &btlauncherAPI::get_version));
 	
@@ -476,6 +485,58 @@ FB::VariantList btlauncherAPI::isRunning(const std::string& val) {
 	return list;
 }
 
+void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
+                                   bool success,
+                                   const FB::HeaderMap& header,
+                                   const boost::shared_array<uint8_t>& data,
+                                   const size_t size) {
+	FBLOG_INFO("gotCheckForUpdate()", "START");
+    
+	char *tmpname = strdup("/tmp/btlauncherXXXXXX.pkg");
+	mkstemp(tmpname);
+	ofstream f(tmpname);
+	
+	if (f.fail()) {
+		FBLOG_INFO("gotCheckForUpdate()", "f.fail");
+		callback->InvokeAsync("", FB::variant_list_of(false)(-1));
+		return;
+	}
+	f.write((char *)data.get(), size);
+	f.close();
+    
+    switch(fork())
+    {
+        case -1: {
+            perror("BTLauncher Run Program Fork");
+            FBLOG_INFO("gotCheckForUpdate()", "BTLauncher Run Program Fork");
+            FBLOG_INFO("gotCheckForUpdate()", "exit");
+            exit(1);
+            break;
+        }
+        case 0: {
+            FBLOG_INFO("gotCheckForUpdate()", "execlp");
+            FBLOG_INFO("gotCheckForUpdate()", tmpname);
+            execlp("installer", "installer", "-pkg", tmpname, "-target", "CurrentUserHomeDirectory", NULL);
+            FBLOG_INFO("gotCheckForUpdate()", "exit");
+            exit(1);
+        }
+        default: {
+            break;
+        }
+    }
+    
+    callback->InvokeAsync("", FB::variant_list_of(true)(1));
+	FBLOG_INFO("gotCheckForUpdate()", "END");
+}
+
+void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
+    std::string url = std::string(PLUGIN_DL);
+    url.append( std::string("?v=") );
+    url.append( std::string(FBSTRING_PLUGIN_VERSION) );
+    
+    FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url),
+                                     boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4), false);
+}
 
 void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
 	FBLOG_INFO("ajax()", "START");
