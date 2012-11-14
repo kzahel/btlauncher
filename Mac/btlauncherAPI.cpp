@@ -290,8 +290,6 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	{
 		case -1:
 			FBLOG_INFO("gotDownloadProgram()", "fork failed");
-			FBLOG_INFO("gotDownloadProgram()", "exit");
-			exit(1);
 			break;
 		case 0:
 			FBLOG_INFO("gotDownloadProgram()", "running tar");
@@ -413,16 +411,14 @@ FB::variant btlauncherAPI::runProgram(const std::string& program, const FB::JSOb
 		{
 			case -1: {
 				perror("BTLauncher Run Program Fork");
-				FBLOG_INFO("runProgram()", "BTLauncher Run Program Fork");
-				FBLOG_INFO("runProgram()", "exit");
-				exit(1);
+				FBLOG_INFO("runProgram()", "fork - failure");
 				break;
 			}
 			case 0: {
-				FBLOG_INFO("runProgram()", "execlp");
+				FBLOG_INFO("runProgram()", "fork - child process");
 				FBLOG_INFO("runProgram()", exe.c_str());
 				execlp(exe.c_str(), exe.c_str(), NULL);
-				FBLOG_INFO("runProgram()", "exit");
+				FBLOG_INFO("runProgram()", "child process exit");
 				exit(1);
 			}
 			default: {
@@ -507,20 +503,18 @@ void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback,
     switch(fork())
     {
         case -1: {
-            perror("BTLauncher Run Program Fork");
-            FBLOG_INFO("gotCheckForUpdate()", "BTLauncher Run Program Fork");
-            FBLOG_INFO("gotCheckForUpdate()", "exit");
-            exit(1);
+            FBLOG_INFO("gotCheckForUpdate()", "fork - failure");
             break;
         }
         case 0: {
-            FBLOG_INFO("gotCheckForUpdate()", "execlp");
+            FBLOG_INFO("gotCheckForUpdate()", "fork - child process");
             FBLOG_INFO("gotCheckForUpdate()", tmpname);
             execlp("installer", "installer", "-pkg", tmpname, "-target", "CurrentUserHomeDirectory", NULL);
-            FBLOG_INFO("gotCheckForUpdate()", "exit");
+            FBLOG_INFO("gotCheckForUpdate()", "child process exit");
             exit(1);
         }
         default: {
+            FBLOG_INFO("gotCheckForUpdate()", "fork - parent process");
             break;
         }
     }
