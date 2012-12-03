@@ -1,0 +1,12 @@
+#!/bin/bash
+function psapp() {
+    ps -ax | grep -i $1 | grep -i -v  "grep.-i.$1" | awk '{print $1}';
+}
+kill $(psapp SoShare);
+kill $(psapp Torque);
+rm -rf ~/Library/Application\ Support/SoShare*
+rm -rf ~/Library/Application\ Support/Torque*
+sudo rm -rf /Library/Internet\ Plug-Ins/Torque.plugin
+rm -rf ~/Library/Internet\ Plug-Ins/Torque.plugin
+sudo rm -rf /Library/Internet\ Plug-Ins/SoShare.plugin
+rm -rf ~/Library/Internet\ Plug-Ins/SoShare.plugin
