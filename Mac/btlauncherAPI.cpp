@@ -317,7 +317,7 @@ void btlauncherAPI::downloadProgram(const std::string& program, const FB::JSObje
 
 	FBLOG_INFO("downloadProgram()", url.c_str());
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4), false
 		);
 	FBLOG_INFO("downloadProgram()", "END");
 }
@@ -543,7 +543,7 @@ void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback
 		return;
 	}
 	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
-		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4)
+		boost::bind(&btlauncherAPI::gotajax, this, callback, _1, _2, _3, _4), false
 		);
 	FBLOG_INFO("ajax()", "END");
 }
