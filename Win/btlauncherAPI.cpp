@@ -45,11 +45,6 @@
 	#define PLUGIN_DL "http://torque.bittorrent.com/Torque.msi"
 #endif //TORQUE
 
-#ifdef CHROME
-	#define PLUGIN_DL "http://torque.bittorrent.com/Chrome.msi"
-#endif //TORQUE
-
-
 #define UT_DL "http://download.utorrent.com/latest/uTorrent.exe"
 #define BT_DL "http://download.bittorrent.com/latest/BitTorrent.exe"
 #define LV_DL "http://s3.amazonaws.com/live-installer/BTLivePlugin.exe"
@@ -99,7 +94,9 @@ btlauncherAPI::btlauncherAPI(const btlauncherPtr& plugin, const FB::BrowserHostP
 	registerMethod("stopRunning", make_method(this, &btlauncherAPI::stopRunning));
 	registerMethod("runProgram", make_method(this, &btlauncherAPI::runProgram));
 	registerMethod("downloadProgram", make_method(this, &btlauncherAPI::downloadProgram));
+#ifndef CHROME
 	registerMethod("checkForUpdate", make_method(this, &btlauncherAPI::checkForUpdate));
+#endif //CHROME
 	registerMethod("getPID", make_method(this, &btlauncherAPI::getPID));
 
 	registerMethod("ajax", make_method(this, &btlauncherAPI::ajax));
@@ -273,6 +270,7 @@ void btlauncherAPI::gotDownloadProgram(const FB::JSObjectPtr& callback,
 	OutputDebugString(_T("gotDownloadProgram EXIT"));
 }
 
+#ifndef CHROME
 void btlauncherAPI::gotCheckForUpdate(const FB::JSObjectPtr& callback, 
 									   bool success,
 									   const FB::HeaderMap& headers,
@@ -349,6 +347,7 @@ void btlauncherAPI::checkForUpdate(const FB::JSObjectPtr& callback) {
 		boost::bind(&btlauncherAPI::gotCheckForUpdate, this, callback, _1, _2, _3, _4), false
 		);
 }
+#endif //CHROME
 
 void btlauncherAPI::ajax(const std::string& url, const FB::JSObjectPtr& callback) {
 	OutputDebugString(_T("ajax ENTER"));
@@ -440,12 +439,13 @@ void btlauncherAPI::downloadProgram(const std::wstring& program, const FB::JSObj
 	} else if (wcsstr(program.c_str(), _T("BTLive"))) { 
 		url = std::string(LV_DL);
 	} else {
-	  return;
+		//its a rebranded Torque build...just use torque but go with the flow
+		url = std::string(TORQUE_DL);
 	}
 	
 	//url = version.c_str();
 		
-	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url), 
+	FB::SimpleStreamHelper::AsyncGet(m_host, FB::URI::fromString(url),
 		boost::bind(&btlauncherAPI::gotDownloadProgram, this, callback, program, _1, _2, _3, _4), false
 	);
 	OutputDebugString(_T("downloadProgram EXIT"));
