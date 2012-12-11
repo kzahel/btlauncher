@@ -612,7 +612,7 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 	FB::URI uri = FB::URI::fromString(location);
 	OutputDebugStringA(location.c_str());
 
-#ifndef CHROME
+#ifndef CHROME && VERIFY_PAIRING
 	bool allowed = false;
 	for(int i = 0; i < lenof(PAIRING_DOMAINS); i++) {
 		allowed |= (uri.domain.find(PAIRING_DOMAINS[i])!=std::string::npos);
@@ -624,7 +624,7 @@ FB::variant btlauncherAPI::pair(const std::wstring& program) {
 		OutputDebugString(_T("pair EXIT"));
 		return _T("access denied");
 	}
-#endif //CHROME
+#endif //CHROME && VERIFY_PAIRING
 	//std::string location = w->getLocation();
 	BOOL ret = FALSE;
 	std::wstring key = GetRandomKey();
