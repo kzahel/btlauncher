@@ -59,6 +59,8 @@ btlauncher::~btlauncher()
     // root object) and tell the host to free the retained JSAPI objects then
     // unless you are holding another shared_ptr reference to your JSAPI object
     // they will be released here.
+    releaseRootJSAPI();
+    m_host->freeRetainedObjects();
 }
 
 void btlauncher::onPluginReady()
